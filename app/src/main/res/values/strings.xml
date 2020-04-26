@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">V4over6</string>
+    <string name="server_addr">Server IPv6 Address</string>
+    <string name="server_port">Server Port</string>
+    <string name="reset">Reset</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="not_connected">Not Connected</string>
+    <string name="ipv6">IPv6</string>
+    <string name="port">Port</string>
 </resources>
