@@ -21,7 +21,7 @@ import top.liplus.v4over6.R;
 import top.liplus.v4over6.vpn.Ipv4Config;
 import top.liplus.v4over6.vpn.Statistics;
 import top.liplus.v4over6.vpn.VpnService4Over6;
-
+//import com.google.common.net.InetAddresses;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     private VpnService4Over6 vpnService = new VpnService4Over6();
     private String addr = "";
-    private String port = "";
+    private int port = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,40 +73,77 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // validate user inputs
+        if (!validateIpv6Address(etAddr.getText().toString())) {
+            view.post(() -> {
+                Toast.makeText(this, "Invalid IPv6 address", Toast.LENGTH_SHORT).show();
+                switchControls(false);
+            });
+            return;
+        }
         addr = etAddr.getText().toString();
-        port = etPort.getText().toString();
 
-//        InetAddressVali
-//        if (!isValidIpv6Address(addr)) {
-//
-//        }
-//        if (!isValidPort(port)) {
-//
-//        }
+        if (!validatePort(etPort.getText().toString())) {
+            view.post(() -> {
+                Toast.makeText(this, "Invalid port", Toast.LENGTH_SHORT).show();
+                switchControls(false);
+            });
+            return;
+        }
+        port = Integer.parseInt(etPort.getText().toString());
 
+        // assume connection success
         switchControls(true);
 
         Log.i(TAG, "Connecting to [" + addr + "]:" + port);
-//        etInfo.setText("Connecting to " + addr + ":" + port);
+        new Thread(() -> {
 
-        boolean isSuccess = connect(addr, port);
-        if (isSuccess) {
-            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
+//        etInfo.setText("Connecting to " + addr + ":" + port);
+            boolean isSuccess = connect(addr, port);
+            if (!isSuccess) {
+                view.post(() -> {
+                    Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
+                    switchControls(false);
+                });
+                return;
+            }
+
             ipv4Config = requestIpv4Config(ipv4Config);
             // TODO check success
+
+            view.post(() -> {
+                Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
+            });
+
             Intent vpnIndent = VpnService.prepare(this);
             if (vpnIndent != null) {
                 startActivityForResult(vpnIndent, 0);
             } else {
                 startVpn();
             }
-        } else {
-            Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
-            switchControls(false);
+        }).start();
+    }
+
+    private static boolean validateIpv6Address(String addr) {
+//        try {
+//            Inet6Address.getByName(addr);
+//            return true;
+//        } catch (UnknownHostException e) {
+//            return false;
+//        }
+        return true;
+    }
+
+    private static boolean validatePort(String port) {
+        try {
+            int port_int = Integer.parseInt(port);
+            return 0 <= port_int && port_int < 65536;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
-    void startVpn() {
+    private void startVpn() {
         Log.d(TAG, "Starting VPN service");
         vpnService.protect(ipv4Config.socketFd);
         int tunnelFd = vpnService.start(ipv4Config);
@@ -138,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("lib4over6");
     }
 
-    private native boolean connect(String addr, String port);
+    private native boolean connect(String addr, int port);
 
     private native void disconnect();
 

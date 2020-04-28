@@ -10,14 +10,12 @@
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_connect(JNIEnv *env, jobject instance, jstring addr_,
-                                                      jstring port_) {
+                                                      jint port) {
     const char *addr = env->GetStringUTFChars(addr_, 0);
-    const char *port = env->GetStringUTFChars(port_, 0);
 
-    int ret = establish_connection(addr, atoi(port));
+    int ret = establish_connection(addr, port);
 
     env->ReleaseStringUTFChars(addr_, addr);
-    env->ReleaseStringUTFChars(port_, port);
 
     return (ret < 0) ? JNI_FALSE : JNI_TRUE;
 }
