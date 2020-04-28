@@ -33,8 +33,8 @@ static volatile int received_configuration = 0;
 static pthread_t receive_pid = -1, timer_pid = -1, forward_pid = -1;
 static time_t last_heartbeat_recv = -1, last_heartbeat_send = -1;
 
-char ip[20], route[20], dns1[20], dns2[20], dns3[20], remote[64], port[6];
-int out_byte, out_pkt, in_byte, in_pkt; 
+char ip[20], route[20], dns1[20], dns2[20], dns3[20];
+int out_byte, out_pkt, in_byte, in_pkt;
 
 static void print_packet(uint8_t * packet, size_t len) {
 //    static char str[4096 * 3];
@@ -102,8 +102,8 @@ static void *receive_thread(void *args) {
             uint8_t *body = read_exact(socket_fd, len);
             if (msg_type == 103) {
                 // copy reply to TUN
-                LOGD("Received 103 len: %ld", len);
-                print_packet(body, len);
+//                LOGD("Received 103 len: %ld", len);
+//                print_packet(body, len);
                 write(tun_fd, body, len);
             } else if (msg_type == 101) {
                 // configuration from server
@@ -204,8 +204,8 @@ static void *forward_thread(void *args) {
         data.header.type = 102;
         memcpy(data.data, ip, len);
         data.header.length = len + HEADER_LEN;
-        LOGD("Sent %d", data.header.length);
-        print_packet(data.data, len);
+//        LOGD("Sent %d", data.header.length);
+//        print_packet(data.data, len);
         if (write(socket_fd, &data, data.header.length) < 0) {
             LOGE("Error writing payload to socket: %s", strerror(errno));
         } else {

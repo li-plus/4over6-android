@@ -1,16 +1,13 @@
 #include <jni.h>
-#include <cstdlib>
-#include <string.h>
 
 #define TAG "jni_interface"
-#include "log.h"
 
 #include "4over6.h"
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_connect(JNIEnv *env, jobject instance, jstring addr_,
-                                                      jint port) {
+Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject instance,
+                                                            jstring addr_, jint port) {
     const char *addr = env->GetStringUTFChars(addr_, 0);
 
     int ret = establish_connection(addr, port);
@@ -22,7 +19,7 @@ Java_top_liplus_v4over6_activity_MainActivity_connect(JNIEnv *env, jobject insta
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_disconnect(JNIEnv *env, jobject instance) {
+Java_top_liplus_v4over6_activity_MainActivity_disconnectSocket(JNIEnv *env, jobject instance) {
     tearup_connection();
 }
 
@@ -75,24 +72,24 @@ Java_top_liplus_v4over6_activity_MainActivity_initTunnel(JNIEnv *env, jobject in
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject instance,
-                                                            jobject data) {
-    jclass clazz = env->GetObjectClass(data);
+                                                            jobject stats) {
+    jclass clazz = env->GetObjectClass(stats);
     jfieldID field_id;
 
     field_id = env->GetFieldID(clazz, "state", "Z");
-    env->SetBooleanField(clazz, field_id, socket_fd != -1 ? JNI_TRUE : JNI_FALSE);
+    env->SetBooleanField(stats, field_id, socket_fd != -1 ? JNI_TRUE : JNI_FALSE);
 
     field_id = env->GetFieldID(clazz, "uploadPackets", "I");
-    env->SetIntField(clazz, field_id, out_pkt);
+    env->SetIntField(stats, field_id, out_pkt);
 
     field_id = env->GetFieldID(clazz, "uploadBytes", "I");
-    env->SetIntField(clazz, field_id, out_byte);
+    env->SetIntField(stats, field_id, out_byte);
 
     field_id = env->GetFieldID(clazz, "downloadPackets", "I");
-    env->SetIntField(clazz, field_id, in_pkt);
+    env->SetIntField(stats, field_id, in_pkt);
 
     field_id = env->GetFieldID(clazz, "downloadBytes", "I");
-    env->SetIntField(clazz, field_id, in_byte);
+    env->SetIntField(stats, field_id, in_byte);
 
     return JNI_TRUE;
 }

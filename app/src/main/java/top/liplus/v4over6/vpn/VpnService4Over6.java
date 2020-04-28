@@ -16,9 +16,16 @@ public class VpnService4Over6 extends VpnService {
                 .addAddress(config.ipv4, 32)
                 .addRoute(config.route, 0)
                 .addDnsServer(config.dns1)
+                .addDnsServer(config.dns2)
+                .addDnsServer(config.dns3)
                 .setSession("Session " + config.ipv4)
                 .establish();
-        return parcelFileDescriptor.getFd();
+
+        if (parcelFileDescriptor == null) {
+            return -1;
+        } else {
+            return parcelFileDescriptor.getFd();
+        }
     }
 
     public void stop() throws IOException {

@@ -13,6 +13,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -32,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
     protected EditText etAddr;
     @BindView(R.id.et_server_port)
     protected EditText etPort;
-//    private EditText etInfo;
+    @BindView(R.id.et_info)
+    protected EditText etInfo;
 
     private Statistics statistics = new Statistics();
     private Ipv4Config ipv4Config = new Ipv4Config();
@@ -42,32 +45,26 @@ public class MainActivity extends AppCompatActivity {
     private String addr = "";
     private int port = -1;
 
+    private Timer statUpdater = new Timer("statUpdater");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
-//        Statistics statistics = getStatistics(new Statistics());
-//        if (statistics.state) {
-//            Log.i(TAG, "VPN still connected");
-////            this.statistics = statistics;
-////            ipv4Config = requestIpv4Config(ipv4Config);
-//            // TODO check success
-//        }
     }
 
     @OnClick(R.id.btn_connect)
     void handleClickConnect(View view) {
         if (isConnected) {
-            disconnect();
+            disconnectSocket();
             try {
                 vpnService.stop();
                 Log.i(TAG, "VPN stopped");
             } catch (IOException e) {
                 Log.i(TAG, "Cannot stop VPN");
             }
-//            statisticsUpdater.dispose();
+            statUpdater.purge();
             isConnected = false;
             switchControls(false);
             return;
@@ -96,38 +93,36 @@ public class MainActivity extends AppCompatActivity {
         switchControls(true);
 
         Log.i(TAG, "Connecting to [" + addr + "]:" + port);
-        new Thread(() -> {
 
 //        etInfo.setText("Connecting to " + addr + ":" + port);
-            boolean isSuccess = connect(addr, port);
-            if (!isSuccess) {
-                view.post(() -> {
-                    Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
-                    switchControls(false);
-                });
-                return;
-            }
-
-            boolean ret = requestIpv4Config(ipv4Config);
-            if (!ret) {
-                view.post(() -> {
-                    Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
-                    switchControls(false);
-                });
-                return;
-            }
-
+        boolean isSuccess = connectSocket(addr, port);
+        if (!isSuccess) {
             view.post(() -> {
-                Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
+                switchControls(false);
             });
+            return;
+        }
 
-            Intent vpnIndent = VpnService.prepare(this);
-            if (vpnIndent != null) {
-                startActivityForResult(vpnIndent, 0);
-            } else {
-                startVpn();
-            }
-        }).start();
+        boolean ret = requestIpv4Config(ipv4Config);
+        if (!ret) {
+            view.post(() -> {
+                Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
+                switchControls(false);
+            });
+            return;
+        }
+
+        view.post(() -> {
+            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
+        });
+
+        Intent vpnIndent = VpnService.prepare(this);
+        if (vpnIndent != null) {
+            startActivityForResult(vpnIndent, 0);
+        } else {
+            startVpn();
+        }
     }
 
     private static boolean validateIpv6Address(String addr) {
@@ -153,9 +148,23 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Starting VPN service");
         vpnService.protect(ipv4Config.socketFd);
         int tunnelFd = vpnService.start(ipv4Config);
+        if (tunnelFd < 0) {
+            disconnectSocket();
+            return;
+        }
         initTunnel(tunnelFd);
         isConnected = true;
         // TODO setup statistics
+
+        statUpdater.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                getStatistics(statistics);
+                etInfo.post(() -> etInfo.setText(String.format("Download bytes: %d ptk: %d\nUpload bytes: %d ptk: %d",
+                        statistics.downloadBytes, statistics.downloadPackets, statistics.uploadBytes, statistics.uploadPackets))
+                );
+            }
+        }, 0, 1000);
     }
 
     void switchControls(boolean isConnected) {
@@ -181,13 +190,13 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("lib4over6");
     }
 
-    private native boolean connect(String addr, int port);
+    private native boolean connectSocket(String addr, int port);
 
-    private native void disconnect();
+    private native void disconnectSocket();
 
     private native boolean requestIpv4Config(Ipv4Config config);
 
     private native void initTunnel(int tunnel_fd);
 
-    private native boolean getStatistics(Statistics data);
+    private native boolean getStatistics(Statistics stats);
 }
