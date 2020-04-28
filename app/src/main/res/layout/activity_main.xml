@@ -6,24 +6,16 @@
     android:layout_height="match_parent"
     tools:context=".activity.MainActivity">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8sp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="8sp"
-                android:text="@string/ipv6" />
+            android:layout_margin="8sp"
+            android:orientation="vertical"
+            app:layout_constraintTop_toTopOf="parent">
 
             <EditText
                 android:id="@+id/et_server_addr"
@@ -31,20 +23,9 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8sp"
                 android:hint="@string/server_addr"
-                android:inputType="text" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="8sp"
-                android:text="@string/port" />
+                android:inputType="text"
+                android:tag="@string/ipv6"
+                android:text="240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695" />
 
             <EditText
                 android:id="@+id/et_server_port"
@@ -52,17 +33,29 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8sp"
                 android:hint="@string/server_port"
-                android:inputType="number" />
+                android:inputType="number"
+                android:text="5555" />
+
+            <Button
+                android:id="@+id/btn_connect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="8sp"
+                android:text="@string/connect" />
+
+            <EditText
+                android:id="@+id/et_info"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:lines="20" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_connect"
+        <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_margin="8sp"
-            android:text="@string/connect" />
-
-    </LinearLayout>
+            android:layout_gravity="center"
+            android:visibility="invisible" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

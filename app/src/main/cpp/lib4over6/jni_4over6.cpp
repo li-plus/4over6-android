@@ -10,7 +10,7 @@ Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject
                                                             jstring addr_, jint port) {
     const char *addr = env->GetStringUTFChars(addr_, 0);
 
-    int ret = establish_connection(addr, port);
+    int ret = v4over6::establish_connection(addr, port);
 
     env->ReleaseStringUTFChars(addr_, addr);
 
@@ -20,14 +20,14 @@ Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject
 extern "C"
 JNIEXPORT void JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_disconnectSocket(JNIEnv *env, jobject instance) {
-    tearup_connection();
+    v4over6::tearup_connection();
 }
 
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, jobject instance,
                                                                 jobject config) {
-    int ret = request_configuration();
+    int ret = v4over6::request_configuration();
     if (ret < 0) {
         return JNI_FALSE;
     }
@@ -37,27 +37,27 @@ Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, job
     jstring jstr;
 
     field_id = env->GetFieldID(clazz, "ipv4", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(ip);
+    jstr = env->NewStringUTF(v4over6::ip);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "route", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(route);
+    jstr = env->NewStringUTF(v4over6::route);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "dns1", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(dns1);
+    jstr = env->NewStringUTF(v4over6::dns1);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "dns2", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(dns2);
+    jstr = env->NewStringUTF(v4over6::dns2);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "dns3", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(dns3);
+    jstr = env->NewStringUTF(v4over6::dns3);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "socketFd", "I");
-    env->SetIntField(config, field_id, socket_fd);
+    env->SetIntField(config, field_id, v4over6::socket_fd);
 
     return JNI_TRUE;
 }
@@ -66,7 +66,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_initTunnel(JNIEnv *env, jobject instance,
                                                          jint tunnel_fd) {
-    setup_tun(tunnel_fd);
+    v4over6::setup_tun(tunnel_fd);
 }
 
 extern "C"
@@ -76,20 +76,17 @@ Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject
     jclass clazz = env->GetObjectClass(stats);
     jfieldID field_id;
 
-    field_id = env->GetFieldID(clazz, "state", "Z");
-    env->SetBooleanField(stats, field_id, socket_fd != -1 ? JNI_TRUE : JNI_FALSE);
-
     field_id = env->GetFieldID(clazz, "uploadPackets", "I");
-    env->SetIntField(stats, field_id, out_pkt);
+    env->SetIntField(stats, field_id, v4over6::out_pkt);
 
     field_id = env->GetFieldID(clazz, "uploadBytes", "I");
-    env->SetIntField(stats, field_id, out_byte);
+    env->SetIntField(stats, field_id, v4over6::out_byte);
 
     field_id = env->GetFieldID(clazz, "downloadPackets", "I");
-    env->SetIntField(stats, field_id, in_pkt);
+    env->SetIntField(stats, field_id, v4over6::in_pkt);
 
     field_id = env->GetFieldID(clazz, "downloadBytes", "I");
-    env->SetIntField(stats, field_id, in_byte);
+    env->SetIntField(stats, field_id, v4over6::in_byte);
 
     return JNI_TRUE;
 }
