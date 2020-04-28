@@ -2,6 +2,7 @@
 
 #define TAG "jni_interface"
 
+#include "msg.h"
 #include "4over6.h"
 
 extern "C"
@@ -10,7 +11,7 @@ Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject
                                                             jstring addr_, jint port) {
     const char *addr = env->GetStringUTFChars(addr_, 0);
 
-    int ret = v4over6::establish_connection(addr, port);
+    int ret = v4over6::connect_socket(addr, port);
 
     env->ReleaseStringUTFChars(addr_, addr);
 
@@ -20,7 +21,7 @@ Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject
 extern "C"
 JNIEXPORT void JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_disconnectSocket(JNIEnv *env, jobject instance) {
-    v4over6::tearup_connection();
+    v4over6::disconnect_socket();
 }
 
 extern "C"
@@ -66,7 +67,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_initTunnel(JNIEnv *env, jobject instance,
                                                          jint tunnel_fd) {
-    v4over6::setup_tun(tunnel_fd);
+    v4over6::setup_tunnel(tunnel_fd);
 }
 
 extern "C"

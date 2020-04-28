@@ -17,11 +17,12 @@
 
 #define TAG "lib4over6"
 
+#include "msg.h"
 #include "4over6.h"
 #include "log.h"
 
 namespace v4over6 {
-    int socket_fd = -1, tun_fd = -1;
+    int socket_fd = -1, tunnel_fd = -1;
 
     static pthread_cond_t config_cond = PTHREAD_COND_INITIALIZER;
     static pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -97,12 +98,12 @@ namespace v4over6 {
             size_t len = msg_length - sizeof(message_header_t);
             if (len >= 0) {
                 uint8_t *body = read_exact(socket_fd, len);
-                if (msg_type == 103) {
+                if (msg_type == MSG_TYPE_RESPONSE) {
                     // copy reply to TUN
 //                LOGD("Received 103 len: %ld", len);
 //                print_packet(body, len);
-                    write(tun_fd, body, len);
-                } else if (msg_type == 101) {
+                    write(tunnel_fd, body, len);
+                } else if (msg_type == MSG_TYPE_IP_RESPONSE) {
                     // configuration from server
                     char buffer[1024];
                     memcpy(buffer, body, len);
@@ -114,7 +115,7 @@ namespace v4over6 {
                     received_configuration = 1;
                     pthread_cond_signal(&config_cond);
                     pthread_mutex_unlock(&config_mutex);
-                } else if (msg_type == 104) {
+                } else if (msg_type == MSG_TYPE_HEARTBEAT) {
                     // heartbeat packet
                     LOGI("Received heartbeat from server");
                     last_heartbeat_recv = time(NULL);
@@ -145,13 +146,13 @@ namespace v4over6 {
                 // close connection
                 LOGE("Server heartbeat timeout");
                 timer_pid = -1; // prevent itself to be killed
-                tearup_connection();
+                disconnect_socket();
                 pthread_exit((void *) EXIT_FAILURE);
             }
             if (last_heartbeat_send == -1 ||
                 current_time - last_heartbeat_send >= 20) {
                 // send heartbeat
-                message_header_t heartbeat = {.length = sizeof(message_header_t), .type = 104};
+                message_header_t heartbeat = {.length = sizeof(message_header_t), .type = MSG_TYPE_HEARTBEAT};
                 if (write(socket_fd, &heartbeat, heartbeat.length) < 0) {
                     LOGE("Failed to send heartbeat: %s", strerror(errno));
                 } else {
@@ -175,7 +176,7 @@ namespace v4over6 {
 
         while (true) {
             uint8_t *current = buffer;
-            ssize_t read_bytes = read(tun_fd, buffer, sizeof(buffer));
+            ssize_t read_bytes = read(tunnel_fd, buffer, sizeof(buffer));
             if (read_bytes < 0) {
                 continue;
             }
@@ -198,7 +199,7 @@ namespace v4over6 {
             assert(current == end);
 
             message_t data;
-            data.header.type = 102;
+            data.header.type = MSG_TYPE_REQUEST;
             memcpy(data.data, ip, len);
             data.header.length = len + sizeof(message_header_t);
 //        LOGD("Sent %d", data.header.length);
@@ -214,7 +215,7 @@ namespace v4over6 {
     }
 
 
-    int establish_connection(const char *addr_s, int port) {
+    int connect_socket(const char *addr_s, int port) {
         LOGI("Starting setup process");
 //
 //    struct addrinfo hints = { 0 };
@@ -267,7 +268,7 @@ namespace v4over6 {
     int request_configuration() {
 
         // send request
-        message_header_t ip_request = {.length = sizeof(message_header_t), .type = 100};
+        message_header_t ip_request = {.length = sizeof(message_header_t), .type = MSG_TYPE_IP_REQUEST};
         if (write(socket_fd, &ip_request, ip_request.length) < 0) {
             LOGE("Failed to send connection request: %s", strerror(errno));
             return -1;
@@ -288,7 +289,7 @@ namespace v4over6 {
         return 0;
     }
 
-    void tearup_connection() {
+    void disconnect_socket() {
 
         LOGI("Starting tearup process");
 
@@ -322,9 +323,9 @@ namespace v4over6 {
         }
     }
 
-    void setup_tun(int fd) {
-        LOGD("Got VPN TUN fd: %d", fd);
-        tun_fd = fd;
+    void setup_tunnel(int tunnel_fd_) {
+        LOGD("Got VPN TUN fd: %d", tunnel_fd_);
+        tunnel_fd = tunnel_fd_;
         pthread_create(&forward_pid, NULL, forward_thread, NULL);
     }
 }
