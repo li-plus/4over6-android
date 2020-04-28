@@ -14,17 +14,24 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import top.liplus.v4over6.R;
 import top.liplus.v4over6.vpn.Ipv4Config;
 import top.liplus.v4over6.vpn.Statistics;
 import top.liplus.v4over6.vpn.VpnService4Over6;
 
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private Button btnConnect;
-    private EditText etAddr;
-    private EditText etPort;
+    @BindView(R.id.btn_connect)
+    protected Button btnConnect;
+    @BindView(R.id.et_server_addr)
+    protected EditText etAddr;
+    @BindView(R.id.et_server_port)
+    protected EditText etPort;
 //    private EditText etInfo;
 
     private Statistics statistics = new Statistics();
@@ -39,13 +46,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-        btnConnect = findViewById(R.id.btn_connect);
-        etAddr = findViewById(R.id.et_server_addr);
-        etPort = findViewById(R.id.et_server_port);
-
-        btnConnect.setOnClickListener(this::handleClickConnect);
-//
 //        Statistics statistics = getStatistics(new Statistics());
 //        if (statistics.state) {
 //            Log.i(TAG, "VPN still connected");
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
 //        }
     }
 
+    @OnClick(R.id.btn_connect)
     void handleClickConnect(View view) {
         if (isConnected) {
             disconnect();
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
         switchControls(true);
 
-        Log.i(TAG , "Connecting to [" + addr + "]:" + port);
+        Log.i(TAG, "Connecting to [" + addr + "]:" + port);
 //        etInfo.setText("Connecting to " + addr + ":" + port);
 
         boolean isSuccess = connect(addr, port);
