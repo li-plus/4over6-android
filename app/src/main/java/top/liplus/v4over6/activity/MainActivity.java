@@ -108,8 +108,14 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            ipv4Config = requestIpv4Config(ipv4Config);
-            // TODO check success
+            boolean ret = requestIpv4Config(ipv4Config);
+            if (!ret) {
+                view.post(() -> {
+                    Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
+                    switchControls(false);
+                });
+                return;
+            }
 
             view.post(() -> {
                 Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
@@ -179,9 +185,9 @@ public class MainActivity extends AppCompatActivity {
 
     private native void disconnect();
 
-    private native Ipv4Config requestIpv4Config(Ipv4Config config);
+    private native boolean requestIpv4Config(Ipv4Config config);
 
     private native void initTunnel(int tunnel_fd);
 
-    private native Statistics getStatistics(Statistics data);
+    private native boolean getStatistics(Statistics data);
 }

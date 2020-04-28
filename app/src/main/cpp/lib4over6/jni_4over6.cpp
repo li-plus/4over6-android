@@ -27,19 +27,18 @@ Java_top_liplus_v4over6_activity_MainActivity_disconnect(JNIEnv *env, jobject in
 }
 
 extern "C"
-JNIEXPORT jobject JNICALL
+JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, jobject instance,
                                                                 jobject config) {
     int ret = request_configuration();
     if (ret < 0) {
-        return NULL;
+        return JNI_FALSE;
     }
     jclass clazz = env->GetObjectClass(config);
 
     jfieldID field_id;
     jstring jstr;
 
-    LOGI("setting ipv4");
     field_id = env->GetFieldID(clazz, "ipv4", "Ljava/lang/String;");
     jstr = env->NewStringUTF(ip);
     env->SetObjectField(config, field_id, jstr);
@@ -48,26 +47,22 @@ Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, job
     jstr = env->NewStringUTF(route);
     env->SetObjectField(config, field_id, jstr);
 
-    LOGI("setting dns1");
     field_id = env->GetFieldID(clazz, "dns1", "Ljava/lang/String;");
     jstr = env->NewStringUTF(dns1);
     env->SetObjectField(config, field_id, jstr);
 
-    LOGI("setting dns2");
     field_id = env->GetFieldID(clazz, "dns2", "Ljava/lang/String;");
     jstr = env->NewStringUTF(dns2);
     env->SetObjectField(config, field_id, jstr);
 
-    LOGI("setting dns3");
     field_id = env->GetFieldID(clazz, "dns3", "Ljava/lang/String;");
     jstr = env->NewStringUTF(dns3);
     env->SetObjectField(config, field_id, jstr);
 
-    LOGI("setting socketfd");
     field_id = env->GetFieldID(clazz, "socketFd", "I");
     env->SetIntField(config, field_id, socket_fd);
 
-    return config;
+    return JNI_TRUE;
 }
 
 extern "C"
@@ -78,7 +73,7 @@ Java_top_liplus_v4over6_activity_MainActivity_initTunnel(JNIEnv *env, jobject in
 }
 
 extern "C"
-JNIEXPORT jobject JNICALL
+JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject instance,
                                                             jobject data) {
     jclass clazz = env->GetObjectClass(data);
@@ -99,5 +94,5 @@ Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject
     field_id = env->GetFieldID(clazz, "downloadBytes", "I");
     env->SetIntField(clazz, field_id, in_byte);
 
-    return data;
+    return JNI_TRUE;
 }
