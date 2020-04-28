@@ -7,9 +7,10 @@
 
 #include <stdint.h>
 
-extern char ip[20], route[20], dns1[20], dns2[20], dns3[20], remote[64], port[6];
+extern char ip[20], route[20], dns1[20], dns2[20], dns3[20];
 extern int out_byte, out_pkt, in_byte, in_pkt; 
 extern int socket_fd;
+
 typedef struct __attribute__ ((packed)) {
   uint32_t length;
   uint8_t type;

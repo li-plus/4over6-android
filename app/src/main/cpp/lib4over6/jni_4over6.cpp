@@ -11,15 +11,13 @@ extern "C"
 JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_connect(JNIEnv *env, jobject instance, jstring addr_,
                                                       jstring port_) {
-    const char *addr_s = env->GetStringUTFChars(addr_, 0);
-    const char *port_s = env->GetStringUTFChars(port_, 0);
+    const char *addr = env->GetStringUTFChars(addr_, 0);
+    const char *port = env->GetStringUTFChars(port_, 0);
 
-    strcpy(port, port_s);
-    strcpy(remote, addr_s);
-    int ret = establish_connection(addr_s, atoi(port_s));
+    int ret = establish_connection(addr, atoi(port));
 
-    env->ReleaseStringUTFChars(addr_, addr_s);
-    env->ReleaseStringUTFChars(port_, port_s);
+    env->ReleaseStringUTFChars(addr_, addr);
+    env->ReleaseStringUTFChars(port_, port);
 
     return (ret < 0) ? JNI_FALSE : JNI_TRUE;
 }
@@ -46,21 +44,6 @@ Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, job
     LOGI("setting ipv4");
     field_id = env->GetFieldID(clazz, "ipv4", "Ljava/lang/String;");
     jstr = env->NewStringUTF(ip);
-    env->SetObjectField(config, field_id, jstr);
-
-    LOGI("setting ipv6");
-    field_id = env->GetFieldID(clazz, "ipv6", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(remote);
-    env->SetObjectField(config, field_id, jstr);
-
-    LOGI("setting port");
-    field_id = env->GetFieldID(clazz, "port", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(port);
-    env->SetObjectField(config, field_id, jstr);
-
-    LOGI("setting searchDomain");
-    field_id = env->GetFieldID(clazz, "searchDomain", "Ljava/lang/String;");
-    jstr = env->NewStringUTF("tsinghua.edu.cn");
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "route", "Ljava/lang/String;");
