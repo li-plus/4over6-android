@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <linux/if_tun.h>
 #include <linux/ip.h>
 #include <net/if.h>
 #include <stdint.h>
@@ -81,78 +80,71 @@ namespace v4over6 {
         }
     }
 
-// read from socket
+    // forward packets from socket to tunnel
     static void *receive_thread(void *args) {
-
-        uint8_t buffer[4096];
-
         LOGI("Reading thread started");
         signal(SIGUSR2, signal_handler);
 
         while (true) {
-            message_header_t *msg =
-                    (message_header_t *) read_exact(socket_fd, sizeof(message_header_t));
-            uint32_t msg_length = msg->length;
-            uint8_t msg_type = msg->type;
+            message_header_t *msg = (message_header_t *)
+                    read_exact(socket_fd, sizeof(message_header_t));
 
-            size_t len = msg_length - sizeof(message_header_t);
-            if (len >= 0) {
-                uint8_t *body = read_exact(socket_fd, len);
-                if (msg_type == MSG_TYPE_RESPONSE) {
-                    // copy reply to TUN
+            size_t body_len = msg->length - sizeof(message_header_t);
+            if (body_len < 0) {
+                continue;
+            }
+
+            uint8_t *body = read_exact(socket_fd, body_len);
+            if (msg->type == MSG_TYPE_RESPONSE) {
 //                LOGD("Received 103 len: %ld", len);
 //                print_packet(body, len);
-                    write(tunnel_fd, body, len);
-                } else if (msg_type == MSG_TYPE_IP_RESPONSE) {
-                    // configuration from server
-                    char buffer[1024];
-                    memcpy(buffer, body, len);
-                    buffer[len] = '\0';
-                    LOGD("received 101: %s", buffer);
-                    sscanf(buffer, "%s %s %s %s %s", ip, route, dns1, dns2, dns3);
-                    // wake up sleeping thread
-                    pthread_mutex_lock(&config_mutex);
-                    received_configuration = 1;
-                    pthread_cond_signal(&config_cond);
-                    pthread_mutex_unlock(&config_mutex);
-                } else if (msg_type == MSG_TYPE_HEARTBEAT) {
-                    // heartbeat packet
-                    LOGI("Received heartbeat from server");
-                    last_heartbeat_recv = time(NULL);
-                } else {
-                    // unknown type
-                    LOGE("Unrecognised msg type %d with length %d", msg_type,
-                         msg_length);
-                }
+                write(tunnel_fd, body, body_len);
+            } else if (msg->type == MSG_TYPE_IP_RESPONSE) {
+                char buffer[4096];
+                memcpy(buffer, body, body_len);
+                buffer[body_len] = '\0';
+                LOGD("received 101: %s", buffer);
+                sscanf(buffer, "%s %s %s %s %s", ip, route, dns1, dns2, dns3);
+                // wake up sleeping thread
+                pthread_mutex_lock(&config_mutex);
+                received_configuration = 1;
+                pthread_cond_signal(&config_cond);
+                pthread_mutex_unlock(&config_mutex);
+            } else if (msg->type == MSG_TYPE_HEARTBEAT) {
+                LOGI("Received heartbeat from server");
+                last_heartbeat_recv = time(NULL);
+            } else {
+                LOGE("Unrecognised msg type %d with length %d", msg->type, msg->length);
             }
 
             in_pkt++;
-            in_byte += msg_length;
+            in_byte += msg->length;
         }
         return NULL;
     }
 
-// manage heartbeat
+    // handle heartbeat
     static void *timer_thread(void *args) {
-
         LOGI("Timer thread started");
         signal(SIGUSR2, signal_handler);
         last_heartbeat_recv = time(NULL);
 
         while (true) {
             time_t current_time = time(NULL);
-            if (last_heartbeat_recv != -1 &&
-                current_time - last_heartbeat_recv > 60) {
+            if (last_heartbeat_recv != -1 && current_time - last_heartbeat_recv > 60) {
                 // close connection
                 LOGE("Server heartbeat timeout");
                 timer_pid = -1; // prevent itself to be killed
                 disconnect_socket();
-                pthread_exit((void *) EXIT_FAILURE);
+                pthread_exit(EXIT_SUCCESS);
             }
             if (last_heartbeat_send == -1 ||
                 current_time - last_heartbeat_send >= 20) {
                 // send heartbeat
-                message_header_t heartbeat = {.length = sizeof(message_header_t), .type = MSG_TYPE_HEARTBEAT};
+                message_header_t heartbeat = {
+                        .length = sizeof(message_header_t),
+                        .type = MSG_TYPE_HEARTBEAT
+                };
                 if (write(socket_fd, &heartbeat, heartbeat.length) < 0) {
                     LOGE("Failed to send heartbeat: %s", strerror(errno));
                 } else {
@@ -164,78 +156,49 @@ namespace v4over6 {
             }
             sleep(1);
         }
-
         return NULL;
     }
 
-// forward packet from TUN to socket
+    // forward packets from tunnel to socket
     static void *forward_thread(void *args) {
         LOGI("Forward thread started");
         signal(SIGUSR2, signal_handler);
         uint8_t buffer[4096];
 
         while (true) {
-            uint8_t *current = buffer;
             ssize_t read_bytes = read(tunnel_fd, buffer, sizeof(buffer));
             if (read_bytes < 0) {
                 continue;
             }
-            uint8_t *end = current + read_bytes;
-
-            struct iphdr *hdr = (struct iphdr *) current;
+            struct iphdr *hdr = (struct iphdr *) buffer;
             if (hdr->version != 4) {
                 LOGD("Not a ipv4 packet");
                 continue;
             }
-            uint8_t *ip = current;
-            uint16_t len = ntohs(hdr->tot_len);
-            uint8_t header_len = hdr->ihl * 4;
-            current += header_len;
-            assert(current <= end);
+            uint16_t tot_len = ntohs(hdr->tot_len);
+            uint16_t header_len = hdr->ihl * 4;
+            assert(header_len <= tot_len);
+            assert(read_bytes == tot_len);
 
-            uint8_t *body = current;
-            uint16_t body_len = len - header_len;
-            current += body_len;
-            assert(current == end);
-
-            message_t data;
-            data.header.type = MSG_TYPE_REQUEST;
-            memcpy(data.data, ip, len);
-            data.header.length = len + sizeof(message_header_t);
+            message_t msg;
+            msg.header.type = MSG_TYPE_REQUEST;
+            msg.header.length = tot_len + sizeof(message_header_t);
+            memcpy(msg.data, buffer, tot_len);
 //        LOGD("Sent %d", data.header.length);
 //        print_packet(data.data, len);
-            if (write(socket_fd, &data, data.header.length) < 0) {
+            if (write(socket_fd, &msg, msg.header.length) < 0) {
                 LOGE("Error writing payload to socket: %s", strerror(errno));
             } else {
                 out_pkt++;
-                out_byte += data.header.length;
+                out_byte += msg.header.length;
             }
         }
         return NULL;
     }
 
-
     int connect_socket(const char *addr_s, int port) {
         LOGI("Starting setup process");
-//
-//    struct addrinfo hints = { 0 };
-//    struct addrinfo *res;
-//    int gai_err;
-//    int s;
-//
-//    hints.ai_family = AF_INET6;
-//    hints.ai_socktype = SOCK_STREAM;
-//
-//    gai_err = getaddrinfo("fe80::dd65:a055:eb91:de98%wlan0", "5555", &hints, &res);
-//
-//    if (gai_err)
-//    {
-//        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(gai_err));
-//        return 1;
-//    }
-//
         struct sockaddr_in6 addr;
-//    socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
         if (socket_fd < 0) {
             LOGE("Error creating socket: %s", strerror(errno));
