@@ -12,13 +12,13 @@ namespace v4over6 {
 
 #define MSG_DATA_SIZE 4096
 
-    typedef struct __attribute__ ((packed)) {
+    struct __attribute__ ((packed)) MessageHeader {
         uint32_t length;
         uint8_t type;
-    } message_header_t;
+    };
 
-    typedef struct __attribute__ ((packed)) {
-        message_header_t header;
+    struct __attribute__ ((packed)) Message {
+        MessageHeader header;
         uint8_t data[MSG_DATA_SIZE];
-    } message_t;
+    };
 }

@@ -3,6 +3,7 @@ package top.liplus.v4over6.activity;
 import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
@@ -170,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
 
         int ret = requestIpv4Config();
         if (ret < 0) {
+            disconnectSocket();
             view.post(() -> {
                 Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
                 switchControls(false);

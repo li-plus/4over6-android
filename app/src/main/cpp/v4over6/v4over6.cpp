@@ -62,15 +62,15 @@ namespace v4over6 {
         signal(SIGUSR2, signal_handler);
 
         while (true) {
-            message_t msg;
+            Message msg;
             ssize_t read_bytes = read_exact(socket_fd, (uint8_t *) &msg.header,
-                                            sizeof(message_header_t));
+                                            sizeof(MessageHeader));
             if (read_bytes < 0) {
                 LOGE("Error reading from socket: %s", strerror(errno));
                 continue;
             }
 
-            size_t data_len = msg.header.length - sizeof(message_header_t);
+            size_t data_len = msg.header.length - sizeof(MessageHeader);
             if (data_len < 0 || data_len > MSG_DATA_SIZE) {
                 continue;
             }
@@ -125,8 +125,8 @@ namespace v4over6 {
             if (last_heartbeat_send == -1 ||
                 current_time - last_heartbeat_send >= 20) {
                 // send heartbeat
-                message_header_t heartbeat = {
-                        .length = sizeof(message_header_t),
+                MessageHeader heartbeat = {
+                        .length = sizeof(MessageHeader),
                         .type = MSG_TYPE_HEARTBEAT
                 };
                 if (write(socket_fd, &heartbeat, heartbeat.length) < 0) {
@@ -135,7 +135,7 @@ namespace v4over6 {
                     LOGI("Heartbeat sent");
                     last_heartbeat_send = current_time;
                     stats.out_packets++;
-                    stats.out_bytes += sizeof(message_header_t);
+                    stats.out_bytes += sizeof(MessageHeader);
                 }
             }
             sleep(1);
@@ -164,9 +164,9 @@ namespace v4over6 {
             assert(header_len <= tot_len);
             assert(read_bytes == tot_len);
 
-            message_t msg;
+            Message msg;
             msg.header.type = MSG_TYPE_REQUEST;
-            msg.header.length = tot_len + sizeof(message_header_t);
+            msg.header.length = tot_len + sizeof(MessageHeader);
             memcpy(msg.data, buffer, tot_len);
             if (write(socket_fd, &msg, msg.header.length) < 0) {
                 LOGE("Error writing to socket: %s", strerror(errno));
@@ -219,7 +219,7 @@ namespace v4over6 {
     int request_ipv4_config() {
 
         // send request
-        message_header_t ip_request = {.length = sizeof(message_header_t), .type = MSG_TYPE_IP_REQUEST};
+        MessageHeader ip_request = {.length = sizeof(MessageHeader), .type = MSG_TYPE_IP_REQUEST};
         if (write(socket_fd, &ip_request, ip_request.length) < 0) {
             LOGE("Failed to send IPv4 config request: %s", strerror(errno));
             return -1;
@@ -228,9 +228,13 @@ namespace v4over6 {
         LOGI("IPv4 config request sent");
 
         // wait for configuration
+        timespec timeout = {.tv_sec=time(NULL) + 5, .tv_nsec=0};
         pthread_mutex_lock(&config_mutex);
         while (received_configuration == 0) {
-            pthread_cond_wait(&config_cond, &config_mutex);
+            if (pthread_cond_timedwait(&config_cond, &config_mutex, &timeout) == ETIMEDOUT) {
+                LOGE("IPv4 config timeout");
+                return -1;
+            }
         }
         pthread_mutex_unlock(&config_mutex);
 
