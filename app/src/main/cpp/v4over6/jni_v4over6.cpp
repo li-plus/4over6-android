@@ -6,7 +6,7 @@
 #include "v4over6.h"
 
 extern "C"
-JNIEXPORT jboolean JNICALL
+JNIEXPORT jint JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject instance,
                                                             jstring addr_, jint port) {
     const char *addr = env->GetStringUTFChars(addr_, 0);
@@ -15,7 +15,7 @@ Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject
 
     env->ReleaseStringUTFChars(addr_, addr);
 
-    return (ret < 0) ? JNI_FALSE : JNI_TRUE;
+    return ret;
 }
 
 extern "C"
@@ -25,13 +25,42 @@ Java_top_liplus_v4over6_activity_MainActivity_disconnectSocket(JNIEnv *env, jobj
 }
 
 extern "C"
-JNIEXPORT jboolean JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, jobject instance,
-                                                                jobject config) {
-    int ret = v4over6::request_configuration();
-    if (ret < 0) {
-        return JNI_FALSE;
-    }
+JNIEXPORT jint JNICALL
+Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, jobject instance) {
+    return v4over6::request_ipv4_config();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_top_liplus_v4over6_activity_MainActivity_setupTunnel(JNIEnv *env, jobject instance,
+                                                         jint tunnel_fd) {
+    v4over6::setup_tunnel(tunnel_fd);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject instance,
+                                                            jobject stats) {
+    jclass clazz = env->GetObjectClass(stats);
+    jfieldID field_id;
+
+    field_id = env->GetFieldID(clazz, "uploadPackets", "I");
+    env->SetIntField(stats, field_id, v4over6::out_pkt);
+
+    field_id = env->GetFieldID(clazz, "uploadBytes", "I");
+    env->SetIntField(stats, field_id, v4over6::out_byte);
+
+    field_id = env->GetFieldID(clazz, "downloadPackets", "I");
+    env->SetIntField(stats, field_id, v4over6::in_pkt);
+
+    field_id = env->GetFieldID(clazz, "downloadBytes", "I");
+    env->SetIntField(stats, field_id, v4over6::in_byte);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_top_liplus_v4over6_activity_MainActivity_getIpv4Config(JNIEnv *env, jobject instance,
+                                                            jobject config) {
     jclass clazz = env->GetObjectClass(config);
 
     jfieldID field_id;
@@ -59,35 +88,4 @@ Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, job
 
     field_id = env->GetFieldID(clazz, "socketFd", "I");
     env->SetIntField(config, field_id, v4over6::socket_fd);
-
-    return JNI_TRUE;
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_initTunnel(JNIEnv *env, jobject instance,
-                                                         jint tunnel_fd) {
-    v4over6::setup_tunnel(tunnel_fd);
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject instance,
-                                                            jobject stats) {
-    jclass clazz = env->GetObjectClass(stats);
-    jfieldID field_id;
-
-    field_id = env->GetFieldID(clazz, "uploadPackets", "I");
-    env->SetIntField(stats, field_id, v4over6::out_pkt);
-
-    field_id = env->GetFieldID(clazz, "uploadBytes", "I");
-    env->SetIntField(stats, field_id, v4over6::out_byte);
-
-    field_id = env->GetFieldID(clazz, "downloadPackets", "I");
-    env->SetIntField(stats, field_id, v4over6::in_pkt);
-
-    field_id = env->GetFieldID(clazz, "downloadBytes", "I");
-    env->SetIntField(stats, field_id, v4over6::in_byte);
-
-    return JNI_TRUE;
 }

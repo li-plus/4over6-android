@@ -9,7 +9,7 @@ namespace v4over6 {
 
     int connect_socket(const char *addr, int port);
 
-    int request_configuration();
+    int request_ipv4_config();
 
     void disconnect_socket();
 

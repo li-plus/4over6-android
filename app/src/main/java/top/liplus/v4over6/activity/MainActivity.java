@@ -95,8 +95,8 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "Connecting to [" + addr + "]:" + port);
 
 //        etInfo.setText("Connecting to " + addr + ":" + port);
-        boolean isSuccess = connectSocket(addr, port);
-        if (!isSuccess) {
+        int ret = connectSocket(addr, port);
+        if (ret < 0) {
             view.post(() -> {
                 Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
                 switchControls(false);
@@ -104,14 +104,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        boolean ret = requestIpv4Config(ipv4Config);
-        if (!ret) {
+        ret = requestIpv4Config();
+        if (ret < 0) {
             view.post(() -> {
                 Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
                 switchControls(false);
             });
             return;
         }
+        getIpv4Config(ipv4Config);
 
         view.post(() -> {
             Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             disconnectSocket();
             return;
         }
-        initTunnel(tunnelFd);
+        setupTunnel(tunnelFd);
         isConnected = true;
         // TODO setup statistics
 
@@ -190,13 +191,15 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("v4over6");
     }
 
-    private native boolean connectSocket(String addr, int port);
+    private native int connectSocket(String addr, int port);
 
     private native void disconnectSocket();
 
-    private native boolean requestIpv4Config(Ipv4Config config);
+    private native int requestIpv4Config();
 
-    private native void initTunnel(int tunnel_fd);
+    private native void setupTunnel(int tunnel_fd);
 
-    private native boolean getStatistics(Statistics stats);
+    private native void getStatistics(Statistics stats);
+
+    private native void getIpv4Config(Ipv4Config config);
 }

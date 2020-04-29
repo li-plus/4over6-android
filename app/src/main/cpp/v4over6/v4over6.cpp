@@ -265,7 +265,7 @@ namespace v4over6 {
         return 0;
     }
 
-    int request_configuration() {
+    int request_ipv4_config() {
 
         // send request
         message_header_t ip_request = {.length = sizeof(message_header_t), .type = MSG_TYPE_IP_REQUEST};
