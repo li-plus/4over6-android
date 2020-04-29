@@ -8,7 +8,9 @@
     <string name="not_connected">Not Connected</string>
     <string name="ipv6">IPv6</string>
     <string name="port">Port</string>
-    <string name="pat_bytes">%s (%d pkt)</string>
+    <string name="pattern_bytes">%s (%d pkt)</string>
+    <string name="pattern_upload_speed">▲ %s/s</string>
+    <string name="pattern_download_speed">▼ %s/s</string>
     <string name="connected">Connected</string>
     <string name="no_connection">No Connection</string>
 </resources>

@@ -48,14 +48,16 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.tv_connect_status)
     protected TextView tvConnectStatus;
 
+    private static VpnService4Over6 vpnService = new VpnService4Over6();
+
+    int prevDownloadBytes = 0;
+    int prevUploadBytes = 0;
     private Statistics stats = new Statistics();
     private Ipv4Config ipv4Config = new Ipv4Config();
     private boolean isConnected;
-
-    private static VpnService4Over6 vpnService = new VpnService4Over6();
     private int socketFd = -1;
-
-    private Timer statsUpdater = new Timer("statsUpdater");
+    private static Timer statsUpdater = new Timer("statsUpdater");
+    boolean enableStatsUpdater = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,16 +65,44 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        statsUpdater.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (enableStatsUpdater) {
+                    getStatistics(stats);
+                    int deltaUploadBytes = stats.uploadBytes - prevUploadBytes;
+                    int deltaDownloadBytes = stats.downloadBytes - prevDownloadBytes;
+                    prevUploadBytes = stats.uploadBytes;
+                    prevDownloadBytes = stats.downloadBytes;
+
+                    fabConnect.post(() -> {
+                        tvDownloadBytes.setText(String.format(getString(R.string.pattern_bytes),
+                                Formatter.formatFileSize(fabConnect.getContext(), stats.downloadBytes),
+                                stats.downloadPackets));
+                        tvUploadBytes.setText(String.format(getString(R.string.pattern_bytes),
+                                Formatter.formatFileSize(fabConnect.getContext(), stats.uploadBytes),
+                                stats.uploadPackets));
+                        tvUploadSpeed.setText(String.format(getString(R.string.pattern_upload_speed),
+                                Formatter.formatFileSize(fabConnect.getContext(), deltaUploadBytes)));
+                        tvDownloadSpeed.setText(String.format(getString(R.string.pattern_download_speed),
+                                Formatter.formatFileSize(fabConnect.getContext(), deltaDownloadBytes)));
+                    });
+                }
+            }
+        }, 0, 1000);
+
         if (isRunning()) {
             isConnected = true;
             getStatistics(stats);
+            prevDownloadBytes = stats.downloadBytes;
+            prevUploadBytes = stats.uploadBytes;
             getIpv4Config(ipv4Config);
             ServerConfig serverConfig = new ServerConfig();
             getServerConfig(serverConfig);
             etAddr.setText(serverConfig.ipv6);
             etPort.setText(String.valueOf(serverConfig.port));
             switchControls(true);
-            setupStatisticsUpdater();
+            enableStatsUpdater = true;
         }
     }
 
@@ -91,8 +121,15 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 Log.i(TAG, "Cannot stop VPN");
             }
-            statsUpdater.purge();
+
             isConnected = false;
+            enableStatsUpdater = false;
+            prevDownloadBytes = 0;
+            prevUploadBytes = 0;
+            stats = new Statistics();
+            ipv4Config = new Ipv4Config();
+            socketFd = -1;
+
             switchControls(false);
             return;
         }
@@ -141,10 +178,6 @@ public class MainActivity extends AppCompatActivity {
         }
         getIpv4Config(ipv4Config);
 
-        view.post(() -> {
-            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
-        });
-
         Intent vpnIndent = VpnService.prepare(this);
         if (vpnIndent != null) {
             startActivityForResult(vpnIndent, 0);
@@ -182,7 +215,10 @@ public class MainActivity extends AppCompatActivity {
         }
         setupTunnel(tunnelFd);
         isConnected = true;
-        setupStatisticsUpdater();
+//        fabConnect.post(() -> {
+//            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
+//        });
+        enableStatsUpdater = true;
     }
 
     void switchControls(boolean isConnected) {
@@ -190,23 +226,6 @@ public class MainActivity extends AppCompatActivity {
 //        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
         etAddr.setEnabled(!isConnected);
         etPort.setEnabled(!isConnected);
-    }
-
-    void setupStatisticsUpdater() {
-        statsUpdater.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                getStatistics(stats);
-                fabConnect.post(() -> {
-                    tvDownloadBytes.setText(String.format(getString(R.string.pat_bytes),
-                            Formatter.formatFileSize(fabConnect.getContext(), stats.downloadBytes),
-                            stats.downloadPackets));
-                    tvUploadBytes.setText(String.format(getString(R.string.pat_bytes),
-                            Formatter.formatFileSize(fabConnect.getContext(), stats.uploadBytes),
-                            stats.uploadPackets));
-                });
-            }
-        }, 0, 1000);
     }
 
     @Override
