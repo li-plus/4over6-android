@@ -18,7 +18,7 @@
 #define TAG "lib4over6"
 
 #include "msg.h"
-#include "4over6.h"
+#include "v4over6.h"
 #include "log.h"
 
 namespace v4over6 {

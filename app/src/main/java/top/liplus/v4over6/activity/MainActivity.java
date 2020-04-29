@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     static {
-        System.loadLibrary("lib4over6");
+        System.loadLibrary("v4over6");
     }
 
     private native boolean connectSocket(String addr, int port);

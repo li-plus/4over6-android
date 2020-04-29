@@ -3,7 +3,7 @@
 #define TAG "jni_interface"
 
 #include "msg.h"
-#include "4over6.h"
+#include "v4over6.h"
 
 extern "C"
 JNIEXPORT jboolean JNICALL
