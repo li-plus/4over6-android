@@ -21,7 +21,10 @@
 #include "log.h"
 
 namespace v4over6 {
-    int socket_fd = -1, tunnel_fd = -1;
+    static Ipv4Config config;
+    static Statistics stats;
+
+    static int socket_fd = -1, tunnel_fd = -1;
 
     static pthread_cond_t config_cond = PTHREAD_COND_INITIALIZER;
     static pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -29,9 +32,6 @@ namespace v4over6 {
     static volatile int received_configuration = 0;
     static pthread_t receive_pid = -1, timer_pid = -1, forward_pid = -1;
     static time_t last_heartbeat_recv = -1, last_heartbeat_send = -1;
-
-    char ip[20], route[20], dns1[20], dns2[20], dns3[20];
-    int out_byte, out_pkt, in_byte, in_pkt;
 
     static ssize_t read_exact(int fd, uint8_t *buf, size_t count) {
         uint8_t *cur = buf;
@@ -62,7 +62,8 @@ namespace v4over6 {
 
         while (true) {
             message_t msg;
-            ssize_t read_bytes = read_exact(socket_fd, (uint8_t*) &msg.header, sizeof(message_header_t));
+            ssize_t read_bytes = read_exact(socket_fd, (uint8_t *) &msg.header,
+                                            sizeof(message_header_t));
             if (read_bytes < 0) {
                 LOGE("Error reading from socket: %s", strerror(errno));
                 continue;
@@ -73,7 +74,7 @@ namespace v4over6 {
                 continue;
             }
 
-            read_bytes = read_exact(socket_fd, (uint8_t*) msg.data, data_len);
+            read_bytes = read_exact(socket_fd, (uint8_t *) msg.data, data_len);
             if (read_bytes < 0) {
                 LOGE("Error reading from socket: %s", strerror(errno));
                 continue;
@@ -85,7 +86,8 @@ namespace v4over6 {
                 char buffer[MSG_DATA_SIZE];
                 memcpy(buffer, msg.data, data_len);
                 buffer[data_len] = '\0';
-                sscanf(buffer, "%s %s %s %s %s", ip, route, dns1, dns2, dns3);
+                sscanf(buffer, "%s %s %s %s %s",
+                       config.ip, config.route, config.dns1, config.dns2, config.dns3);
                 // wake up sleeping thread
                 pthread_mutex_lock(&config_mutex);
                 received_configuration = 1;
@@ -98,8 +100,8 @@ namespace v4over6 {
                 LOGE("Invalid message: type %d, length %d", msg.header.type, msg.header.length);
             }
 
-            in_pkt++;
-            in_byte += msg.header.length;
+            stats.in_packets++;
+            stats.in_bytes += msg.header.length;
         }
         return NULL;
     }
@@ -131,8 +133,8 @@ namespace v4over6 {
                 } else {
                     LOGI("Heartbeat sent");
                     last_heartbeat_send = current_time;
-                    out_pkt++;
-                    out_byte += sizeof(message_header_t);
+                    stats.out_packets++;
+                    stats.out_bytes += sizeof(message_header_t);
                 }
             }
             sleep(1);
@@ -168,8 +170,8 @@ namespace v4over6 {
             if (write(socket_fd, &msg, msg.header.length) < 0) {
                 LOGE("Error writing to socket: %s", strerror(errno));
             } else {
-                out_pkt++;
-                out_byte += msg.header.length;
+                stats.out_packets++;
+                stats.out_bytes += msg.header.length;
             }
         }
         return NULL;
@@ -195,7 +197,7 @@ namespace v4over6 {
         }
 
         LOGI("Successfully connected");
-        out_byte = out_pkt = in_byte = in_pkt = 0;
+        stats.out_bytes = stats.out_packets = stats.in_bytes = stats.in_packets = 0;
 
         // thread for handling incoming messages
         pthread_create(&receive_pid, NULL, receive_thread, NULL);
@@ -223,7 +225,8 @@ namespace v4over6 {
         }
         pthread_mutex_unlock(&config_mutex);
 
-        LOGI("IPv4 config received: %s %s %s %s %s", ip, route, dns1, dns2, dns3);
+        LOGI("IPv4 config received: %s %s %s %s %s",
+             config.ip, config.route, config.dns1, config.dns2, config.dns3);
 
         return 0;
     }
@@ -265,5 +268,13 @@ namespace v4over6 {
         LOGI("Setting up tunnel file descriptor: %d", tunnel_fd_);
         tunnel_fd = tunnel_fd_;
         pthread_create(&forward_pid, NULL, forward_thread, NULL);
+    }
+
+    Ipv4Config get_ipv4_config() {
+        return config;
+    }
+
+    Statistics get_statistics() {
+        return stats;
     }
 }

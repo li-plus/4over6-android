@@ -33,7 +33,7 @@ Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, job
 extern "C"
 JNIEXPORT void JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_setupTunnel(JNIEnv *env, jobject instance,
-                                                         jint tunnel_fd) {
+                                                          jint tunnel_fd) {
     v4over6::setup_tunnel(tunnel_fd);
 }
 
@@ -44,17 +44,19 @@ Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject
     jclass clazz = env->GetObjectClass(stats);
     jfieldID field_id;
 
+    v4over6::Statistics native_stats = v4over6::get_statistics();
+
     field_id = env->GetFieldID(clazz, "uploadPackets", "I");
-    env->SetIntField(stats, field_id, v4over6::out_pkt);
+    env->SetIntField(stats, field_id, native_stats.out_packets);
 
     field_id = env->GetFieldID(clazz, "uploadBytes", "I");
-    env->SetIntField(stats, field_id, v4over6::out_byte);
+    env->SetIntField(stats, field_id, native_stats.out_bytes);
 
     field_id = env->GetFieldID(clazz, "downloadPackets", "I");
-    env->SetIntField(stats, field_id, v4over6::in_pkt);
+    env->SetIntField(stats, field_id, native_stats.in_packets);
 
     field_id = env->GetFieldID(clazz, "downloadBytes", "I");
-    env->SetIntField(stats, field_id, v4over6::in_byte);
+    env->SetIntField(stats, field_id, native_stats.in_bytes);
 }
 
 extern "C"
@@ -63,26 +65,28 @@ Java_top_liplus_v4over6_activity_MainActivity_getIpv4Config(JNIEnv *env, jobject
                                                             jobject config) {
     jclass clazz = env->GetObjectClass(config);
 
+    v4over6::Ipv4Config native_config = v4over6::get_ipv4_config();
+
     jfieldID field_id;
     jstring jstr;
 
     field_id = env->GetFieldID(clazz, "ipv4", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(v4over6::ip);
+    jstr = env->NewStringUTF(native_config.ip);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "route", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(v4over6::route);
+    jstr = env->NewStringUTF(native_config.route);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "dns1", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(v4over6::dns1);
+    jstr = env->NewStringUTF(native_config.dns1);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "dns2", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(v4over6::dns2);
+    jstr = env->NewStringUTF(native_config.dns2);
     env->SetObjectField(config, field_id, jstr);
 
     field_id = env->GetFieldID(clazz, "dns3", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(v4over6::dns3);
+    jstr = env->NewStringUTF(native_config.dns3);
     env->SetObjectField(config, field_id, jstr);
 }

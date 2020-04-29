@@ -3,9 +3,20 @@
 #include <stdint.h>
 
 namespace v4over6 {
-    extern char ip[20], route[20], dns1[20], dns2[20], dns3[20];
-    extern int out_byte, out_pkt, in_byte, in_pkt;
-    extern int socket_fd;
+    struct Ipv4Config {
+        char ip[20] = "\0";
+        char route[20] = "\0";
+        char dns1[20] = "\0";
+        char dns2[20] = "\0";
+        char dns3[20] = "\0";
+    };
+
+    struct Statistics {
+        int out_bytes = 0;
+        int out_packets = 0;
+        int in_bytes = 0;
+        int in_packets = 0;
+    };
 
     int connect_socket(const char *addr, int port);
 
@@ -14,4 +25,8 @@ namespace v4over6 {
     void disconnect_socket();
 
     void setup_tunnel(int tun_fd);
+
+    Ipv4Config get_ipv4_config();
+
+    Statistics get_statistics();
 }
