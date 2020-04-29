@@ -11,6 +11,7 @@
     <string name="pattern_bytes">%s (%d pkt)</string>
     <string name="pattern_upload_speed">▲ %s/s</string>
     <string name="pattern_download_speed">▼ %s/s</string>
+    <string name="pattern_time">%d h %d min %d s</string>
     <string name="connected">Connected</string>
     <string name="no_connection">No Connection</string>
 </resources>

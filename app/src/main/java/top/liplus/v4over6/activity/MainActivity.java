@@ -3,7 +3,6 @@ package top.liplus.v4over6.activity;
 import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +18,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,17 +48,20 @@ public class MainActivity extends AppCompatActivity {
     protected TextView tvUploadSpeed;
     @BindView(R.id.tv_connect_status)
     protected TextView tvConnectStatus;
+    @BindView(R.id.tv_running_time)
+    protected TextView tvRunningTime;
 
     private static VpnService4Over6 vpnService = new VpnService4Over6();
 
-    int prevDownloadBytes = 0;
-    int prevUploadBytes = 0;
+    private int prevDownloadBytes = 0;
+    private int prevUploadBytes = 0;
     private Statistics stats = new Statistics();
     private Ipv4Config ipv4Config = new Ipv4Config();
     private boolean isConnected;
     private int socketFd = -1;
     private static Timer statsUpdater = new Timer("statsUpdater");
-    boolean enableStatsUpdater = false;
+    private boolean enableStatsUpdater = false;
+    private static long startTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +90,13 @@ public class MainActivity extends AppCompatActivity {
                                 Formatter.formatFileSize(fabConnect.getContext(), deltaUploadBytes)));
                         tvDownloadSpeed.setText(String.format(getString(R.string.pattern_download_speed),
                                 Formatter.formatFileSize(fabConnect.getContext(), deltaDownloadBytes)));
+
+                        long runTimeMs = System.currentTimeMillis() - startTime;
+                        long hours = TimeUnit.MILLISECONDS.toHours(runTimeMs);
+                        long minutes = TimeUnit.MILLISECONDS.toMinutes(runTimeMs) % 60;
+                        long seconds = TimeUnit.MILLISECONDS.toSeconds(runTimeMs) % 60;
+                        tvRunningTime.setText(String.format(getString(R.string.pattern_time),
+                                hours, minutes, seconds));
                     });
                 }
             }
@@ -216,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
         }
         setupTunnel(tunnelFd);
         isConnected = true;
+        startTime = System.currentTimeMillis();
 //        fabConnect.post(() -> {
 //            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
 //        });
