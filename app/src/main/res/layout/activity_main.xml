@@ -1,61 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".activity.MainActivity">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_margin="8sp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <EditText
+            android:id="@+id/et_server_addr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8sp"
+            android:hint="@string/server_addr"
+            android:inputType="text"
+            android:tag="@string/ipv6"
+            android:text="240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695" />
+
+        <EditText
+            android:id="@+id/et_server_port"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8sp"
+            android:hint="@string/server_port"
+            android:inputType="number"
+            android:text="5555" />
+    </LinearLayout>
+
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bar_stats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8sp"
-            android:orientation="vertical"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_marginEnd="12sp"
+            android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/et_server_addr"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8sp"
-                android:hint="@string/server_addr"
-                android:inputType="text"
-                android:tag="@string/ipv6"
-                android:text="240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695" />
+                android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/et_server_port"
+                <TextView
+                    android:id="@+id/tv_upload_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▲ 1 kB/s" />
+
+                <View
+                    android:layout_width="0sp"
+                    android:layout_height="0sp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tv_upload_bytes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2 kB" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8sp"
-                android:hint="@string/server_port"
-                android:inputType="number"
-                android:text="5555" />
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btn_connect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_margin="8sp"
-                android:text="@string/connect" />
+                <TextView
+                    android:id="@+id/tv_download_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▼ 2 kB/s" />
 
-            <EditText
-                android:id="@+id/et_info"
+                <View
+                    android:layout_width="0sp"
+                    android:layout_height="0sp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tv_download_bytes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1 kB" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:lines="20" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="5sp">
+
+                <TextView
+                    android:id="@+id/tv_connect_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_connection"
+                    android:textSize="16sp" />
+
+                <View
+                    android:layout_width="0sp"
+                    android:layout_height="0sp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tv_running_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1 min" />
+            </LinearLayout>
         </LinearLayout>
+    </com.google.android.material.bottomappbar.BottomAppBar>
 
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="invisible" />
-    </FrameLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_anchor="@id/bar_stats"
+        app:srcCompat="@drawable/ic_action_connect" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

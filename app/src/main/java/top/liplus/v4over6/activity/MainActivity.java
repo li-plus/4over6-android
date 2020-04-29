@@ -3,15 +3,17 @@ package top.liplus.v4over6.activity;
 import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -25,21 +27,28 @@ import top.liplus.v4over6.vpn.Ipv4Config;
 import top.liplus.v4over6.vpn.ServerConfig;
 import top.liplus.v4over6.vpn.Statistics;
 import top.liplus.v4over6.vpn.VpnService4Over6;
-//import com.google.common.net.InetAddresses;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    @BindView(R.id.btn_connect)
-    protected Button btnConnect;
     @BindView(R.id.et_server_addr)
     protected EditText etAddr;
     @BindView(R.id.et_server_port)
     protected EditText etPort;
-    @BindView(R.id.et_info)
-    protected EditText etInfo;
+    @BindView(R.id.fab_connect)
+    protected FloatingActionButton fabConnect;
+    @BindView(R.id.tv_download_bytes)
+    protected TextView tvDownloadBytes;
+    @BindView(R.id.tv_download_speed)
+    protected TextView tvDownloadSpeed;
+    @BindView(R.id.tv_upload_bytes)
+    protected TextView tvUploadBytes;
+    @BindView(R.id.tv_upload_speed)
+    protected TextView tvUploadSpeed;
+    @BindView(R.id.tv_connect_status)
+    protected TextView tvConnectStatus;
 
-    private Statistics statistics = new Statistics();
+    private Statistics stats = new Statistics();
     private Ipv4Config ipv4Config = new Ipv4Config();
     private boolean isConnected;
 
@@ -56,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (isRunning()) {
             isConnected = true;
-            getStatistics(statistics);
+            getStatistics(stats);
             getIpv4Config(ipv4Config);
             ServerConfig serverConfig = new ServerConfig();
             getServerConfig(serverConfig);
@@ -68,22 +77,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Log.i(TAG, "fuck here");
-    }
-
-    @Override
     protected void onPause() {
         super.onPause();
     }
 
-    @OnClick(R.id.btn_connect)
+    @OnClick(R.id.fab_connect)
     void handleClickConnect(View view) {
         if (isConnected) {
             disconnectSocket();
@@ -188,7 +186,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void switchControls(boolean isConnected) {
-        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
+        tvConnectStatus.setText(isConnected ? R.string.connected : R.string.no_connection);
+//        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
         etAddr.setEnabled(!isConnected);
         etPort.setEnabled(!isConnected);
     }
@@ -197,10 +196,15 @@ public class MainActivity extends AppCompatActivity {
         statsUpdater.schedule(new TimerTask() {
             @Override
             public void run() {
-                getStatistics(statistics);
-                etInfo.post(() -> etInfo.setText(String.format("Download bytes: %d ptk: %d\nUpload bytes: %d ptk: %d",
-                        statistics.downloadBytes, statistics.downloadPackets, statistics.uploadBytes, statistics.uploadPackets))
-                );
+                getStatistics(stats);
+                fabConnect.post(() -> {
+                    tvDownloadBytes.setText(String.format(getString(R.string.pat_bytes),
+                            Formatter.formatFileSize(fabConnect.getContext(), stats.downloadBytes),
+                            stats.downloadPackets));
+                    tvUploadBytes.setText(String.format(getString(R.string.pat_bytes),
+                            Formatter.formatFileSize(fabConnect.getContext(), stats.uploadBytes),
+                            stats.uploadPackets));
+                });
             }
         }, 0, 1000);
     }
