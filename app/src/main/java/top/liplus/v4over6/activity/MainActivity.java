@@ -154,12 +154,11 @@ public class MainActivity extends AppCompatActivity {
         }
         int port = Integer.parseInt(etPort.getText().toString());
 
-        // assume connection success
+        // connecting
         switchControls(true);
 
         Log.i(TAG, "Connecting to [" + addr + "]:" + port);
 
-//        etInfo.setText("Connecting to " + addr + ":" + port);
         socketFd = connectSocket(addr, port);
         if (socketFd < 0) {
             view.post(() -> {
@@ -200,8 +199,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static boolean validatePort(String port) {
         try {
-            int port_int = Integer.parseInt(port);
-            return 0 <= port_int && port_int < 65536;
+            int portInt = Integer.parseInt(port);
+            return 0 <= portInt && portInt < 65536;
         } catch (NumberFormatException e) {
             return false;
         }

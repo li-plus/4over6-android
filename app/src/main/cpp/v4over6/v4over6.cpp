@@ -228,7 +228,7 @@ namespace v4over6 {
         LOGI("IPv4 config request sent");
 
         // wait for configuration
-        timespec timeout = {.tv_sec=time(NULL) + 5, .tv_nsec=0};
+        timespec timeout = {.tv_sec = time(NULL) + 5, .tv_nsec = 0};
         pthread_mutex_lock(&config_mutex);
         while (received_configuration == 0) {
             if (pthread_cond_timedwait(&config_cond, &config_mutex, &timeout) == ETIMEDOUT) {
