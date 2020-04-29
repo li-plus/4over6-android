@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private VpnService4Over6 vpnService = new VpnService4Over6();
     private String addr = "";
     private int port = -1;
+    private int socketFd = -1;
 
     private Timer statUpdater = new Timer("statUpdater");
 
@@ -95,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "Connecting to [" + addr + "]:" + port);
 
 //        etInfo.setText("Connecting to " + addr + ":" + port);
-        int ret = connectSocket(addr, port);
-        if (ret < 0) {
+        socketFd = connectSocket(addr, port);
+        if (socketFd < 0) {
             view.post(() -> {
                 Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
                 switchControls(false);
@@ -104,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        ret = requestIpv4Config();
+        int ret = requestIpv4Config();
         if (ret < 0) {
             view.post(() -> {
                 Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
@@ -147,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startVpn() {
         Log.d(TAG, "Starting VPN service");
-        vpnService.protect(ipv4Config.socketFd);
+        vpnService.protect(socketFd);
         int tunnelFd = vpnService.start(ipv4Config);
         if (tunnelFd < 0) {
             disconnectSocket();

@@ -85,7 +85,4 @@ Java_top_liplus_v4over6_activity_MainActivity_getIpv4Config(JNIEnv *env, jobject
     field_id = env->GetFieldID(clazz, "dns3", "Ljava/lang/String;");
     jstr = env->NewStringUTF(v4over6::dns3);
     env->SetObjectField(config, field_id, jstr);
-
-    field_id = env->GetFieldID(clazz, "socketFd", "I");
-    env->SetIntField(config, field_id, v4over6::socket_fd);
 }

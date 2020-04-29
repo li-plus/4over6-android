@@ -33,15 +33,6 @@ namespace v4over6 {
     char ip[20], route[20], dns1[20], dns2[20], dns3[20];
     int out_byte, out_pkt, in_byte, in_pkt;
 
-    static void print_packet(uint8_t *packet, size_t len) {
-//    static char str[4096 * 3];
-//    char *curr = str;
-//    for (size_t i = 0; i < len; i++) {
-//        curr += sprintf(curr, "%02x ", packet[i]);
-//    }
-//    LOGD("%s", str);
-    }
-
     static ssize_t read_exact(int fd, uint8_t *buf, size_t count) {
         uint8_t *cur = buf;
         uint8_t *end = buf + count;
@@ -66,7 +57,7 @@ namespace v4over6 {
 
     // forward packets from socket to tunnel
     static void *receive_thread(void *args) {
-        LOGI("Reading thread started");
+        LOGI("Receive thread started");
         signal(SIGUSR2, signal_handler);
 
         while (true) {
@@ -89,14 +80,11 @@ namespace v4over6 {
             }
 
             if (msg.header.type == MSG_TYPE_RESPONSE) {
-//                LOGD("Received 103 len: %ld", len);
-//                print_packet(body, len);
                 write(tunnel_fd, msg.data, data_len);
             } else if (msg.header.type == MSG_TYPE_IP_RESPONSE) {
                 char buffer[MSG_DATA_SIZE];
                 memcpy(buffer, msg.data, data_len);
                 buffer[data_len] = '\0';
-                LOGD("received 101: %s", buffer);
                 sscanf(buffer, "%s %s %s %s %s", ip, route, dns1, dns2, dns3);
                 // wake up sleeping thread
                 pthread_mutex_lock(&config_mutex);
@@ -104,10 +92,10 @@ namespace v4over6 {
                 pthread_cond_signal(&config_cond);
                 pthread_mutex_unlock(&config_mutex);
             } else if (msg.header.type == MSG_TYPE_HEARTBEAT) {
-                LOGI("Received heartbeat from server");
+                LOGI("Heartbeat received");
                 last_heartbeat_recv = time(NULL);
             } else {
-                LOGE("Unrecognised msg type %d with length %d", msg.header.type, msg.header.length);
+                LOGE("Invalid message: type %d, length %d", msg.header.type, msg.header.length);
             }
 
             in_pkt++;
@@ -141,7 +129,7 @@ namespace v4over6 {
                 if (write(socket_fd, &heartbeat, heartbeat.length) < 0) {
                     LOGE("Failed to send heartbeat: %s", strerror(errno));
                 } else {
-                    LOGI("Sent heartbeat to server");
+                    LOGI("Heartbeat sent");
                     last_heartbeat_send = current_time;
                     out_pkt++;
                     out_byte += sizeof(message_header_t);
@@ -165,7 +153,7 @@ namespace v4over6 {
             }
             struct iphdr *hdr = (struct iphdr *) buffer;
             if (hdr->version != 4) {
-                LOGD("Not a ipv4 packet");
+                LOGE("Received an IPv6 packet from tunnel");
                 continue;
             }
             uint16_t tot_len = ntohs(hdr->tot_len);
@@ -177,10 +165,8 @@ namespace v4over6 {
             msg.header.type = MSG_TYPE_REQUEST;
             msg.header.length = tot_len + sizeof(message_header_t);
             memcpy(msg.data, buffer, tot_len);
-//        LOGD("Sent %d", data.header.length);
-//        print_packet(data.data, len);
             if (write(socket_fd, &msg, msg.header.length) < 0) {
-                LOGE("Error writing payload to socket: %s", strerror(errno));
+                LOGE("Error writing to socket: %s", strerror(errno));
             } else {
                 out_pkt++;
                 out_byte += msg.header.length;
@@ -190,27 +176,25 @@ namespace v4over6 {
     }
 
     int connect_socket(const char *addr_s, int port) {
-        LOGI("Starting setup process");
+        LOGI("Connecting to server [%s]:%d", addr_s, port);
         struct sockaddr_in6 addr;
         socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
         if (socket_fd < 0) {
             LOGE("Error creating socket: %s", strerror(errno));
             return -1;
         }
-        LOGI("IPv6 TCP socket created");
+        LOGI("IPv6 socket created");
         bzero(&addr, sizeof(struct sockaddr_in6));
         addr.sin6_family = AF_INET6;
         addr.sin6_port = htons(port);
 
         inet_pton(AF_INET6, addr_s, (struct sockaddr *) &addr.sin6_addr);
-        if (connect(socket_fd, (struct sockaddr *) &addr,
-                    sizeof(struct sockaddr_in6)) < 0) {
-            LOGE("Failed to connect to server [%s]:%d: %s", addr_s, port,
-                 strerror(errno));
+        if (connect(socket_fd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6)) < 0) {
+            LOGE("Failed to connect to server: %s", strerror(errno));
             return -1;
         }
 
-        LOGI("Connected to server %s", addr_s);
+        LOGI("Successfully connected");
         out_byte = out_pkt = in_byte = in_pkt = 0;
 
         // thread for handling incoming messages
@@ -218,7 +202,7 @@ namespace v4over6 {
         // thread for managing keepalive messages
         pthread_create(&timer_pid, NULL, timer_thread, NULL);
 
-        return 0;
+        return socket_fd;
     }
 
     int request_ipv4_config() {
@@ -226,11 +210,11 @@ namespace v4over6 {
         // send request
         message_header_t ip_request = {.length = sizeof(message_header_t), .type = MSG_TYPE_IP_REQUEST};
         if (write(socket_fd, &ip_request, ip_request.length) < 0) {
-            LOGE("Failed to send connection request: %s", strerror(errno));
+            LOGE("Failed to send IPv4 config request: %s", strerror(errno));
             return -1;
         }
 
-        LOGI("IP request sent");
+        LOGI("IPv4 config request sent");
 
         // wait for configuration
         pthread_mutex_lock(&config_mutex);
@@ -239,20 +223,18 @@ namespace v4over6 {
         }
         pthread_mutex_unlock(&config_mutex);
 
-        LOGI("IP configuration received: %s %s %s %s %s", ip, route, dns1, dns2,
-             dns3);
+        LOGI("IPv4 config received: %s %s %s %s %s", ip, route, dns1, dns2, dns3);
 
         return 0;
     }
 
     void disconnect_socket() {
-
-        LOGI("Starting tearup process");
+        LOGI("Disconnecting from server");
 
         if (receive_pid != -1) {
             pthread_kill(receive_pid, SIGUSR2);
             receive_pid = -1;
-            LOGI("Read thread terminated");
+            LOGI("Receive thread terminated");
         }
 
         if (timer_pid != -1) {
@@ -280,7 +262,7 @@ namespace v4over6 {
     }
 
     void setup_tunnel(int tunnel_fd_) {
-        LOGD("Got VPN TUN fd: %d", tunnel_fd_);
+        LOGI("Setting up tunnel file descriptor: %d", tunnel_fd_);
         tunnel_fd = tunnel_fd_;
         pthread_create(&forward_pid, NULL, forward_thread, NULL);
     }
