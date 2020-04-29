@@ -78,7 +78,7 @@ namespace v4over6 {
             }
 
             size_t data_len = msg.header.length - sizeof(message_header_t);
-            if (data_len < 0 || data_len > 4096) {
+            if (data_len < 0 || data_len > MSG_DATA_SIZE) {
                 continue;
             }
 
@@ -93,7 +93,7 @@ namespace v4over6 {
 //                print_packet(body, len);
                 write(tunnel_fd, msg.data, data_len);
             } else if (msg.header.type == MSG_TYPE_IP_RESPONSE) {
-                char buffer[4096];
+                char buffer[MSG_DATA_SIZE];
                 memcpy(buffer, msg.data, data_len);
                 buffer[data_len] = '\0';
                 LOGD("received 101: %s", buffer);
@@ -156,7 +156,7 @@ namespace v4over6 {
     static void *forward_thread(void *args) {
         LOGI("Forward thread started");
         signal(SIGUSR2, signal_handler);
-        uint8_t buffer[4096];
+        uint8_t buffer[MSG_DATA_SIZE];
 
         while (true) {
             ssize_t read_bytes = read(tunnel_fd, buffer, sizeof(buffer));
