@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,6 +22,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import top.liplus.v4over6.R;
 import top.liplus.v4over6.vpn.Ipv4Config;
+import top.liplus.v4over6.vpn.ServerConfig;
 import top.liplus.v4over6.vpn.Statistics;
 import top.liplus.v4over6.vpn.VpnService4Over6;
 //import com.google.common.net.InetAddresses;
@@ -41,18 +43,44 @@ public class MainActivity extends AppCompatActivity {
     private Ipv4Config ipv4Config = new Ipv4Config();
     private boolean isConnected;
 
-    private VpnService4Over6 vpnService = new VpnService4Over6();
-    private String addr = "";
-    private int port = -1;
+    private static VpnService4Over6 vpnService = new VpnService4Over6();
     private int socketFd = -1;
 
-    private Timer statUpdater = new Timer("statUpdater");
+    private Timer statsUpdater = new Timer("statsUpdater");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        if (isRunning()) {
+            isConnected = true;
+            getStatistics(statistics);
+            getIpv4Config(ipv4Config);
+            ServerConfig serverConfig = new ServerConfig();
+            getServerConfig(serverConfig);
+            etAddr.setText(serverConfig.ipv6);
+            etPort.setText(String.valueOf(serverConfig.port));
+            switchControls(true);
+            setupStatisticsUpdater();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.i(TAG, "fuck here");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @OnClick(R.id.btn_connect)
@@ -65,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 Log.i(TAG, "Cannot stop VPN");
             }
-            statUpdater.purge();
+            statsUpdater.purge();
             isConnected = false;
             switchControls(false);
             return;
@@ -79,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
             });
             return;
         }
-        addr = etAddr.getText().toString();
+        String addr = etAddr.getText().toString();
 
         if (!validatePort(etPort.getText().toString())) {
             view.post(() -> {
@@ -88,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
             });
             return;
         }
-        port = Integer.parseInt(etPort.getText().toString());
+        int port = Integer.parseInt(etPort.getText().toString());
 
         // assume connection success
         switchControls(true);
@@ -134,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
 //        } catch (UnknownHostException e) {
 //            return false;
 //        }
-        return true;
+        return !addr.isEmpty() && addr.length() < 40;
     }
 
     private static boolean validatePort(String port) {
@@ -156,9 +184,17 @@ public class MainActivity extends AppCompatActivity {
         }
         setupTunnel(tunnelFd);
         isConnected = true;
-        // TODO setup statistics
+        setupStatisticsUpdater();
+    }
 
-        statUpdater.schedule(new TimerTask() {
+    void switchControls(boolean isConnected) {
+        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
+        etAddr.setEnabled(!isConnected);
+        etPort.setEnabled(!isConnected);
+    }
+
+    void setupStatisticsUpdater() {
+        statsUpdater.schedule(new TimerTask() {
             @Override
             public void run() {
                 getStatistics(statistics);
@@ -167,12 +203,6 @@ public class MainActivity extends AppCompatActivity {
                 );
             }
         }, 0, 1000);
-    }
-
-    void switchControls(boolean isConnected) {
-        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
-        etAddr.setEnabled(!isConnected);
-        etPort.setEnabled(!isConnected);
     }
 
     @Override
@@ -203,4 +233,8 @@ public class MainActivity extends AppCompatActivity {
     private native void getStatistics(Statistics stats);
 
     private native void getIpv4Config(Ipv4Config config);
+
+    private native void getServerConfig(ServerConfig config);
+
+    private native boolean isRunning();
 }

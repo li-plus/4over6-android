@@ -23,6 +23,7 @@
 namespace v4over6 {
     static Ipv4Config config;
     static Statistics stats;
+    static ServerConfig server_config;
 
     static int socket_fd = -1, tunnel_fd = -1;
 
@@ -178,6 +179,14 @@ namespace v4over6 {
     }
 
     int connect_socket(const char *addr_s, int port) {
+        size_t addr_len = strlen(addr_s);
+        if (addr_len > sizeof(server_config.ipv6)) {
+            LOGE("Error creating socket: Invalid address");
+            return -1;
+        }
+        memcpy(server_config.ipv6, addr_s, addr_len);
+        server_config.port = port;
+
         LOGI("Connecting to server [%s]:%d", addr_s, port);
         struct sockaddr_in6 addr;
         socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
@@ -274,7 +283,15 @@ namespace v4over6 {
         return config;
     }
 
+    ServerConfig get_server_config() {
+        return server_config;
+    }
+
     Statistics get_statistics() {
         return stats;
+    }
+
+    bool is_running() {
+        return socket_fd != -1;
     }
 }

@@ -63,9 +63,9 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_top_liplus_v4over6_activity_MainActivity_getIpv4Config(JNIEnv *env, jobject instance,
                                                             jobject config) {
-    jclass clazz = env->GetObjectClass(config);
-
     v4over6::Ipv4Config native_config = v4over6::get_ipv4_config();
+
+    jclass clazz = env->GetObjectClass(config);
 
     jfieldID field_id;
     jstring jstr;
@@ -89,4 +89,29 @@ Java_top_liplus_v4over6_activity_MainActivity_getIpv4Config(JNIEnv *env, jobject
     field_id = env->GetFieldID(clazz, "dns3", "Ljava/lang/String;");
     jstr = env->NewStringUTF(native_config.dns3);
     env->SetObjectField(config, field_id, jstr);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_top_liplus_v4over6_activity_MainActivity_getServerConfig(JNIEnv *env, jobject instance,
+                                                              jobject config) {
+    v4over6::ServerConfig native_config = v4over6::get_server_config();
+
+    jclass clazz = env->GetObjectClass(config);
+
+    jfieldID field_id;
+    jstring jstr;
+
+    field_id = env->GetFieldID(clazz, "ipv6", "Ljava/lang/String;");
+    jstr = env->NewStringUTF(native_config.ipv6);
+    env->SetObjectField(config, field_id, jstr);
+
+    field_id = env->GetFieldID(clazz, "port", "I");
+    env->SetIntField(config, field_id, native_config.port);
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_top_liplus_v4over6_activity_MainActivity_isRunning(JNIEnv *env, jobject instance) {
+    return (jboolean) v4over6::is_running();
 }

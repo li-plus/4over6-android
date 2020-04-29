@@ -4,11 +4,11 @@
 
 namespace v4over6 {
     struct Ipv4Config {
-        char ip[20] = "\0";
-        char route[20] = "\0";
-        char dns1[20] = "\0";
-        char dns2[20] = "\0";
-        char dns3[20] = "\0";
+        char ip[32] = "\0";
+        char route[32] = "\0";
+        char dns1[32] = "\0";
+        char dns2[32] = "\0";
+        char dns3[32] = "\0";
     };
 
     struct Statistics {
@@ -16,6 +16,11 @@ namespace v4over6 {
         int out_packets = 0;
         int in_bytes = 0;
         int in_packets = 0;
+    };
+
+    struct ServerConfig {
+        char ipv6[64] = "\0";
+        int port = -1;
     };
 
     int connect_socket(const char *addr, int port);
@@ -28,5 +33,9 @@ namespace v4over6 {
 
     Ipv4Config get_ipv4_config();
 
+    ServerConfig get_server_config();
+
     Statistics get_statistics();
+
+    bool is_running();
 }
