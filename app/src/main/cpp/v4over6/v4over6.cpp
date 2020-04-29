@@ -42,36 +42,20 @@ namespace v4over6 {
 //    LOGD("%s", str);
     }
 
-    static uint8_t *read_exact(int fd, size_t len) {
-        static size_t pos = 0;
-        static size_t end = 0;
-        const static size_t buffer_size = 40960;
-        static uint8_t buffer[buffer_size];
-        if (pos + len >= buffer_size) {
-            // not enough size, put back to beginning
-            memmove(buffer, buffer + pos, end - pos);
-            end = end - pos;
-            pos = 0;
-        }
-
-        uint8_t *result = buffer + pos;
-        uint8_t *ptr = buffer + end;
-        while (ptr < buffer + pos + len) {
-            ssize_t read_bytes = read(fd, ptr, buffer_size - end);
+    static ssize_t read_exact(int fd, uint8_t *buf, size_t count) {
+        uint8_t *cur = buf;
+        uint8_t *end = buf + count;
+        while (cur < end) {
+            ssize_t read_bytes = read(fd, cur, end - cur);
             if (read_bytes < 0) {
                 if (read_bytes == -1 && errno == EAGAIN) {
                     continue;
                 }
-                LOGE("Error reading from socket: %s", strerror(errno));
-                assert(false);
-            } else {
-                ptr += read_bytes;
-                end += read_bytes;
+                return -1;
             }
+            cur += read_bytes;
         }
-
-        pos += len;
-        return result;
+        return count;
     }
 
     static void signal_handler(int signal) {
@@ -86,23 +70,32 @@ namespace v4over6 {
         signal(SIGUSR2, signal_handler);
 
         while (true) {
-            message_header_t *msg = (message_header_t *)
-                    read_exact(socket_fd, sizeof(message_header_t));
-
-            size_t body_len = msg->length - sizeof(message_header_t);
-            if (body_len < 0) {
+            message_t msg;
+            ssize_t read_bytes = read_exact(socket_fd, (uint8_t*) &msg.header, sizeof(message_header_t));
+            if (read_bytes < 0) {
+                LOGE("Error reading from socket: %s", strerror(errno));
                 continue;
             }
 
-            uint8_t *body = read_exact(socket_fd, body_len);
-            if (msg->type == MSG_TYPE_RESPONSE) {
+            size_t data_len = msg.header.length - sizeof(message_header_t);
+            if (data_len < 0 || data_len > 4096) {
+                continue;
+            }
+
+            read_bytes = read_exact(socket_fd, (uint8_t*) msg.data, data_len);
+            if (read_bytes < 0) {
+                LOGE("Error reading from socket: %s", strerror(errno));
+                continue;
+            }
+
+            if (msg.header.type == MSG_TYPE_RESPONSE) {
 //                LOGD("Received 103 len: %ld", len);
 //                print_packet(body, len);
-                write(tunnel_fd, body, body_len);
-            } else if (msg->type == MSG_TYPE_IP_RESPONSE) {
+                write(tunnel_fd, msg.data, data_len);
+            } else if (msg.header.type == MSG_TYPE_IP_RESPONSE) {
                 char buffer[4096];
-                memcpy(buffer, body, body_len);
-                buffer[body_len] = '\0';
+                memcpy(buffer, msg.data, data_len);
+                buffer[data_len] = '\0';
                 LOGD("received 101: %s", buffer);
                 sscanf(buffer, "%s %s %s %s %s", ip, route, dns1, dns2, dns3);
                 // wake up sleeping thread
@@ -110,15 +103,15 @@ namespace v4over6 {
                 received_configuration = 1;
                 pthread_cond_signal(&config_cond);
                 pthread_mutex_unlock(&config_mutex);
-            } else if (msg->type == MSG_TYPE_HEARTBEAT) {
+            } else if (msg.header.type == MSG_TYPE_HEARTBEAT) {
                 LOGI("Received heartbeat from server");
                 last_heartbeat_recv = time(NULL);
             } else {
-                LOGE("Unrecognised msg type %d with length %d", msg->type, msg->length);
+                LOGE("Unrecognised msg type %d with length %d", msg.header.type, msg.header.length);
             }
 
             in_pkt++;
-            in_byte += msg->length;
+            in_byte += msg.header.length;
         }
         return NULL;
     }
