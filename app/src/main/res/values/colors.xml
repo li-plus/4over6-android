@@ -8,6 +8,8 @@
     <color name="red_9">#990000</color>
     <color name="yellow_9">#999900</color>
 
+    <color name="connected_green">#ff03dac6</color>
+
     <color name="gray_0">#000000</color>
     <color name="gray_1">#111111</color>
     <color name="gray_2">#222222</color>

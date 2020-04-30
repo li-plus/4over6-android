@@ -1,6 +1,7 @@
 package top.liplus.v4over6.activity;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.text.format.Formatter;
@@ -314,16 +315,22 @@ public class MainActivity extends AppCompatActivity {
             tvConnectStatus.setText(R.string.no_connection);
             tvConnectStatus.setTextColor(getColor(R.color.red_9));
             enableStatsUpdater = false;
+            fabConnect.setEnabled(true);
+            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.gray_b)));
             resetConnectionInfo();
         } else if (status == ConnectionStatus.CONNECTING) {
             tvConnectStatus.setText(R.string.connecting);
             tvConnectStatus.setTextColor(getColor(R.color.yellow_9));
             enableStatsUpdater = false;
+            fabConnect.setEnabled(false);
+            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.connected_green)));
             resetConnectionInfo();
         } else {
             tvConnectStatus.setText(R.string.connected);
             tvConnectStatus.setTextColor(getColor(R.color.green_9));
             enableStatsUpdater = true;
+            fabConnect.setEnabled(true);
+            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.connected_green)));
         }
 //        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
 //        etAddr.setEnabled(!isConnected);
