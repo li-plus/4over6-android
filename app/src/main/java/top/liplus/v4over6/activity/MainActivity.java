@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private int prevUploadBytes = 0;
     private Statistics stats = new Statistics();
     private Ipv4Config ipv4Config = new Ipv4Config();
-    private boolean isConnected;
+    private ConnectionStatus status = ConnectionStatus.NO_CONNECTION;
     private int socketFd = -1;
     private static Timer statsUpdater = new Timer("statsUpdater");
     private boolean enableStatsUpdater = false;
@@ -108,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
         rvServerConfig.setItemAnimator(new DefaultItemAnimator());
 
         if (isRunning()) {
-            isConnected = true;
             getStatistics(stats);
             prevDownloadBytes = stats.downloadBytes;
             prevUploadBytes = stats.uploadBytes;
@@ -117,9 +116,9 @@ public class MainActivity extends AppCompatActivity {
             getServerConfig(serverConfig);
 //            etAddr.setText(serverConfig.ipv6);
 //            etPort.setText(String.valueOf(serverConfig.port));
-            switchControls(ConnectionStatus.CONNECTED);
+            switchStatus(ConnectionStatus.CONNECTED);
         } else {
-            switchControls(ConnectionStatus.NO_CONNECTION);
+            switchStatus(ConnectionStatus.NO_CONNECTION);
         }
 
         statsUpdater.schedule(new TimerTask() {
@@ -162,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.fab_connect)
     void handleClickConnect(View view) {
-        if (isConnected) {
+        if (status == ConnectionStatus.CONNECTED) {
             disconnectSocket();
             try {
                 vpnService.stop();
@@ -171,14 +170,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "Cannot stop VPN");
             }
 
-            isConnected = false;
             prevDownloadBytes = 0;
             prevUploadBytes = 0;
             stats = new Statistics();
             ipv4Config = new Ipv4Config();
             socketFd = -1;
 
-            switchControls(ConnectionStatus.NO_CONNECTION);
+            switchStatus(ConnectionStatus.NO_CONNECTION);
             return;
         }
 
@@ -191,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         if (!validateIpv6Address(config.ipv6)) {
             view.post(() -> {
                 Toast.makeText(this, "Invalid IPv6 address", Toast.LENGTH_SHORT).show();
-                switchControls(ConnectionStatus.NO_CONNECTION);
+                switchStatus(ConnectionStatus.NO_CONNECTION);
             });
             return;
         }
@@ -200,14 +198,14 @@ public class MainActivity extends AppCompatActivity {
 //        if (!validatePort(etPort.getText().toString())) {
 //            view.post(() -> {
 //                Toast.makeText(this, "Invalid port", Toast.LENGTH_SHORT).show();
-//                switchControls(false);
+//                switchStatus(false);
 //            });
 //            return;
 //        }
 //        int port = Integer.parseInt(etPort.getText().toString());
 
         // connecting
-        switchControls(ConnectionStatus.CONNECTING);
+        switchStatus(ConnectionStatus.CONNECTING);
 
         Log.i(TAG, "Connecting to [" + addr + "]:" + port);
 
@@ -215,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         if (socketFd < 0) {
             view.post(() -> {
                 Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
-                switchControls(ConnectionStatus.NO_CONNECTION);
+                switchStatus(ConnectionStatus.NO_CONNECTION);
             });
             return;
         }
@@ -225,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
             disconnectSocket();
             view.post(() -> {
                 Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
-                switchControls(ConnectionStatus.NO_CONNECTION);
+                switchStatus(ConnectionStatus.NO_CONNECTION);
             });
             return;
         }
@@ -279,7 +277,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         setupTunnel(tunnelFd);
-        isConnected = true;
         startTime = System.currentTimeMillis();
 //        fabConnect.post(() -> {
 //            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
@@ -289,10 +286,11 @@ public class MainActivity extends AppCompatActivity {
 //        SharedPreferences.Editor sp =getSharedPreferences(Defs.SP_GLOBAL,  MODE_PRIVATE).edit();
 //        sp.putStringSet(Defs.SP_SERVER_CONFIG, );
 //        sp.apply();
-        switchControls(ConnectionStatus.CONNECTED);
+        switchStatus(ConnectionStatus.CONNECTED);
     }
 
-    void switchControls(ConnectionStatus status) {
+    void switchStatus(ConnectionStatus status) {
+        this.status = status;
         if (status == ConnectionStatus.NO_CONNECTION) {
             tvConnectStatus.setText(R.string.no_connection);
             enableStatsUpdater = false;
@@ -318,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                 startVpn();
             } else {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
-                switchControls(ConnectionStatus.NO_CONNECTION);
+                switchStatus(ConnectionStatus.NO_CONNECTION);
             }
         }
     }
