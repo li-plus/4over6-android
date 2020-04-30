@@ -5,6 +5,7 @@ import android.net.VpnService;
 import android.os.Bundle;
 import android.text.format.Formatter;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
@@ -65,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     protected TextView tvRoute;
     @BindView(R.id.tv_dns)
     protected TextView tvDns;
+    @BindView(R.id.top_app_bar)
+    protected MaterialToolbar topAppBar;
 
     private enum ConnectionStatus {
         NO_CONNECTION, CONNECTING, CONNECTED
@@ -107,6 +111,16 @@ public class MainActivity extends AppCompatActivity {
         rvServerConfig.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         rvServerConfig.addItemDecoration(new DividerItemDecoration(rvServerConfig.getContext(), LinearLayoutManager.VERTICAL));
         rvServerConfig.setItemAnimator(new DefaultItemAnimator());
+
+        topAppBar.setOnMenuItemClickListener((MenuItem item) -> {
+            if (item.getItemId() == R.id.menu_new) {
+                // start fragment
+                makeToast("you click add");
+                return true;
+            } else {
+                return false;
+            }
+        });
 
         if (isRunning()) {
             getStatistics(stats);
@@ -183,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
         // validate user inputs
         if (adapter.selectedIndex < 0) {
-            makeToast("Please select config");
+            makeToast("Please select server");
             return;
         }
         ServerConfig config = adapter.getData().get(adapter.selectedIndex);
@@ -298,14 +312,17 @@ public class MainActivity extends AppCompatActivity {
         this.status = status;
         if (status == ConnectionStatus.NO_CONNECTION) {
             tvConnectStatus.setText(R.string.no_connection);
+            tvConnectStatus.setTextColor(getColor(R.color.red_9));
             enableStatsUpdater = false;
             resetConnectionInfo();
         } else if (status == ConnectionStatus.CONNECTING) {
             tvConnectStatus.setText(R.string.connecting);
+            tvConnectStatus.setTextColor(getColor(R.color.yellow_9));
             enableStatsUpdater = false;
             resetConnectionInfo();
         } else {
             tvConnectStatus.setText(R.string.connected);
+            tvConnectStatus.setTextColor(getColor(R.color.green_9));
             enableStatsUpdater = true;
         }
 //        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
