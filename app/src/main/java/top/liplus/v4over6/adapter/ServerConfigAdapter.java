@@ -5,7 +5,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -28,8 +27,9 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
     public BaseRecyclerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         BaseRecyclerViewHolder vh = new BaseRecyclerViewHolder(parent, R.layout.item_server_config);
         vh.getView().setOnClickListener((View view) -> {
+            notifyItemChanged(selectedIndex);
             selectedIndex = vh.getAdapterPosition();
-            notifyDataSetChanged();
+            ((RadioButton) vh.findViewById(R.id.rb_curr_config)).setChecked(true);
         });
         return vh;
     }
