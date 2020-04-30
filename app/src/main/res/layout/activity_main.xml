@@ -13,7 +13,8 @@
         android:layout_height="match_parent"
         android:clickable="true"
         android:fitsSystemWindows="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:paddingBottom="@dimen/bottom_bar_height">
 
     </androidx.recyclerview.widget.RecyclerView>
     <!--<LinearLayout-->
@@ -46,16 +47,16 @@
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bar_stats"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:paddingTop="8sp"
-        android:paddingBottom="12sp">
+        android:layout_height="@dimen/bottom_bar_height"
+        android:layout_gravity="bottom">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="12sp"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingTop="8sp"
+            android:paddingBottom="8sp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -126,6 +127,36 @@
                     android:layout_height="wrap_content"
                     android:text="0 h 0 min 0 s" />
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_ipv4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="IPv4: 192.168.100.100" />
+
+                <View
+                    android:layout_width="0sp"
+                    android:layout_height="0sp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tv_route"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Route: 192.168.100.111" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_dns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lines="2"
+                android:text="DNS: 192.168.100.200 192.168.100.201 192.168.100.202" />
         </LinearLayout>
     </com.google.android.material.bottomappbar.BottomAppBar>
 
