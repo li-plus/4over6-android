@@ -6,16 +6,21 @@ import android.os.Bundle;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +29,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import top.liplus.v4over6.R;
+import top.liplus.v4over6.adapter.ServerConfigAdapter;
 import top.liplus.v4over6.vpn.Ipv4Config;
 import top.liplus.v4over6.vpn.ServerConfig;
 import top.liplus.v4over6.vpn.Statistics;
@@ -32,10 +38,10 @@ import top.liplus.v4over6.vpn.VpnService4Over6;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    @BindView(R.id.et_server_addr)
-    protected EditText etAddr;
-    @BindView(R.id.et_server_port)
-    protected EditText etPort;
+    //    @BindView(R.id.et_server_addr)
+//    protected EditText etAddr;
+//    @BindView(R.id.et_server_port)
+//    protected EditText etPort;
     @BindView(R.id.fab_connect)
     protected FloatingActionButton fabConnect;
     @BindView(R.id.tv_download_bytes)
@@ -50,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
     protected TextView tvConnectStatus;
     @BindView(R.id.tv_running_time)
     protected TextView tvRunningTime;
+    @BindView(R.id.rv_server_config)
+    protected RecyclerView rvServerConfig;
+
+    private ServerConfigAdapter adapter;
 
     private static VpnService4Over6 vpnService = new VpnService4Over6();
 
@@ -102,6 +112,24 @@ public class MainActivity extends AppCompatActivity {
             }
         }, 0, 1000);
 
+
+        List<ServerConfig> data = new ArrayList<>();
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695", 5555));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5556));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5557));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5558));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5559));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5560));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5561));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5562));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5563));
+
+        adapter = new ServerConfigAdapter(this, data);
+        rvServerConfig.setAdapter(adapter);
+        rvServerConfig.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
+        rvServerConfig.addItemDecoration(new DividerItemDecoration(rvServerConfig.getContext(), LinearLayoutManager.VERTICAL));
+        rvServerConfig.setItemAnimator(new DefaultItemAnimator());
+
         if (isRunning()) {
             isConnected = true;
             getStatistics(stats);
@@ -110,8 +138,8 @@ public class MainActivity extends AppCompatActivity {
             getIpv4Config(ipv4Config);
             ServerConfig serverConfig = new ServerConfig();
             getServerConfig(serverConfig);
-            etAddr.setText(serverConfig.ipv6);
-            etPort.setText(String.valueOf(serverConfig.port));
+//            etAddr.setText(serverConfig.ipv6);
+//            etPort.setText(String.valueOf(serverConfig.port));
             switchControls(true);
             enableStatsUpdater = true;
         }
@@ -146,23 +174,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // validate user inputs
-        if (!validateIpv6Address(etAddr.getText().toString())) {
+        if (!validateIpv6Address(adapter.selected.ipv6)) {
             view.post(() -> {
                 Toast.makeText(this, "Invalid IPv6 address", Toast.LENGTH_SHORT).show();
                 switchControls(false);
             });
             return;
         }
-        String addr = etAddr.getText().toString();
-
-        if (!validatePort(etPort.getText().toString())) {
-            view.post(() -> {
-                Toast.makeText(this, "Invalid port", Toast.LENGTH_SHORT).show();
-                switchControls(false);
-            });
-            return;
-        }
-        int port = Integer.parseInt(etPort.getText().toString());
+        String addr = adapter.selected.ipv6;
+        int port = adapter.selected.port;
+//        if (!validatePort(etPort.getText().toString())) {
+//            view.post(() -> {
+//                Toast.makeText(this, "Invalid port", Toast.LENGTH_SHORT).show();
+//                switchControls(false);
+//            });
+//            return;
+//        }
+//        int port = Integer.parseInt(etPort.getText().toString());
 
         // connecting
         switchControls(true);
@@ -230,14 +258,19 @@ public class MainActivity extends AppCompatActivity {
 //        fabConnect.post(() -> {
 //            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
 //        });
+//        Set<String> a = new HashSet<>(1);
+//
+//        SharedPreferences.Editor sp =getSharedPreferences(Defs.SP_GLOBAL,  MODE_PRIVATE).edit();
+//        sp.putStringSet(Defs.SP_SERVER_CONFIG, );
+//        sp.apply();
         enableStatsUpdater = true;
     }
 
     void switchControls(boolean isConnected) {
         tvConnectStatus.setText(isConnected ? R.string.connected : R.string.no_connection);
 //        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
-        etAddr.setEnabled(!isConnected);
-        etPort.setEnabled(!isConnected);
+//        etAddr.setEnabled(!isConnected);
+//        etPort.setEnabled(!isConnected);
     }
 
     @Override

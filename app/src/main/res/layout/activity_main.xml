@@ -7,32 +7,41 @@
     android:orientation="vertical"
     tools:context=".activity.MainActivity">
 
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_server_config"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8sp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:fitsSystemWindows="true"
+        android:focusable="true">
 
-        <EditText
-            android:id="@+id/et_server_addr"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8sp"
-            android:hint="@string/server_addr"
-            android:inputType="text"
-            android:tag="@string/ipv6"
-            android:text="240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695" />
+    </androidx.recyclerview.widget.RecyclerView>
+    <!--<LinearLayout-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_margin="8sp"-->
+    <!--android:orientation="vertical"-->
+    <!--app:layout_constraintTop_toTopOf="parent">-->
 
-        <EditText
-            android:id="@+id/et_server_port"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8sp"
-            android:hint="@string/server_port"
-            android:inputType="number"
-            android:text="5555" />
-    </LinearLayout>
+    <!--<EditText-->
+    <!--android:id="@+id/et_server_addr"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_margin="8sp"-->
+    <!--android:hint="@string/server_addr"-->
+    <!--android:inputType="text"-->
+    <!--android:tag="@string/ipv6"-->
+    <!--android:text="240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695" />-->
+
+    <!--<EditText-->
+    <!--android:id="@+id/et_server_port"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_margin="8sp"-->
+    <!--android:hint="@string/server_port"-->
+    <!--android:inputType="number"-->
+    <!--android:text="5555" />-->
+    <!--</LinearLayout>-->
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bar_stats"
@@ -115,7 +124,7 @@
                     android:id="@+id/tv_running_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1 min" />
+                    android:text="0 h 0 min 0 s" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.bottomappbar.BottomAppBar>
