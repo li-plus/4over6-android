@@ -1,34 +1,25 @@
 package top.liplus.v4over6.activity;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
-public class BaseFragmentActivity extends FragmentActivity {
+import top.liplus.v4over6.fragment.BaseFragment;
 
-    public void startFragment(@NonNull Fragment fragment, int fragmentContainerId) {
-        FragmentManager manager = getSupportFragmentManager();
-        FragmentTransaction transaction = manager.beginTransaction();
-        if (getCurrentFragment() != null) {
-            transaction.hide(getCurrentFragment());
-        }
-        transaction.addToBackStack(fragment.getClass().getName())
-                .add(fragmentContainerId, fragment)
+public abstract class BaseFragmentActivity extends FragmentActivity {
+    private static final String TAG = BaseFragmentActivity.class.getSimpleName();
+
+    public abstract int getContextViewId();
+
+    public int startFragment(@NonNull BaseFragment fragment) {
+        String tagName = fragment.getClass().getName();
+        BaseFragment.TransitionConfig trans = fragment.getTransitionConfig();
+        return getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(trans.enter, trans.exit, trans.popEnter, trans.popExit)
+                .replace(getContextViewId(), fragment, tagName)
+                .addToBackStack(tagName)
                 .commit();
-    }
-
-    @Nullable
-    public Fragment getCurrentFragment() {
-        FragmentManager manager = getSupportFragmentManager();
-        if (manager.getBackStackEntryCount() < 1) {
-            return null;
-        }
-        int index = manager.getBackStackEntryCount() - 1;
-        String tag = manager.getBackStackEntryAt(index).getName();
-        return manager.findFragmentByTag(tag);
     }
 
     @Override

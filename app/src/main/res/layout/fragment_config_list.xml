@@ -10,12 +10,10 @@
         android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/top_app_bar"
+            android:id="@+id/mt_top_bar"
             style="@style/Widget.MaterialComponents.Toolbar.Primary"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:gravity="center"
-            android:textAlignment="center"
             app:menu="@menu/menu_top_bar"
             app:title="4over6" />
 
@@ -32,32 +30,6 @@
         android:paddingBottom="@dimen/bottom_bar_height">
 
     </androidx.recyclerview.widget.RecyclerView>
-    <!--<LinearLayout-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_margin="8sp"-->
-    <!--android:orientation="vertical"-->
-    <!--app:layout_constraintTop_toTopOf="parent">-->
-
-    <!--<EditText-->
-    <!--android:id="@+id/et_server_addr"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_margin="8sp"-->
-    <!--android:hint="@string/server_addr"-->
-    <!--android:inputType="text"-->
-    <!--android:tag="@string/ipv6"-->
-    <!--android:text="240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695" />-->
-
-    <!--<EditText-->
-    <!--android:id="@+id/et_server_port"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_margin="8sp"-->
-    <!--android:hint="@string/server_port"-->
-    <!--android:inputType="number"-->
-    <!--android:text="5555" />-->
-    <!--</LinearLayout>-->
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bar_stats"

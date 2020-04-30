@@ -4,11 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".activity.MainActivity">
-
-    <FrameLayout
-        android:id="@+id/fl_fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    tools:context=".activity.MainActivity"
+    android:id="@+id/cl_main">
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

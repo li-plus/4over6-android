@@ -1,7 +1,11 @@
 <resources>
     <string name="app_name">V4over6</string>
+    <string name="server_name">Server Name</string>
+    <string name="server_name_example">e.g. My fantastic VPN</string>
     <string name="server_addr">Server IPv6 Address</string>
     <string name="server_port">Server Port</string>
+    <string name="server_addr_example">e.g. 2001:db8::23:8:800:417a</string>
+    <string name="server_port_example">e.g. 12345</string>
     <string name="reset">Reset</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>

@@ -36,6 +36,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import top.liplus.v4over6.R;
+import top.liplus.v4over6.activity.BaseFragmentActivity;
 import top.liplus.v4over6.adapter.ServerConfigAdapter;
 import top.liplus.v4over6.vpn.Ipv4Config;
 import top.liplus.v4over6.vpn.ServerConfig;
@@ -45,7 +46,7 @@ import top.liplus.v4over6.vpn.VpnService4Over6;
 
 import static android.app.Activity.RESULT_OK;
 
-public class ConfigListFragment extends Fragment {
+public class ConfigListFragment extends BaseFragment {
     private static final String TAG = ConfigListFragment.class.getSimpleName();
 
     //    @BindView(R.id.et_server_addr)
@@ -74,7 +75,7 @@ public class ConfigListFragment extends Fragment {
     protected TextView tvRoute;
     @BindView(R.id.tv_dns)
     protected TextView tvDns;
-    @BindView(R.id.top_app_bar)
+    @BindView(R.id.mt_top_bar)
     protected MaterialToolbar topAppBar;
 
     private enum ConnectionStatus {
@@ -121,8 +122,7 @@ public class ConfigListFragment extends Fragment {
 
         topAppBar.setOnMenuItemClickListener((MenuItem item) -> {
             if (item.getItemId() == R.id.menu_new) {
-                // start fragment
-                makeToast("you click add");
+                getBaseFragmentActivity().startFragment(new NewConfigFragment());
                 return true;
             } else {
                 return false;
@@ -181,6 +181,11 @@ public class ConfigListFragment extends Fragment {
         }, 0, 1000);
 
         return root;
+    }
+
+    @Override
+    public TransitionConfig getTransitionConfig() {
+        return FADE_TRANSITION_CONFIG;
     }
 
     @OnClick(R.id.fab_connect)
