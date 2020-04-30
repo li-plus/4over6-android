@@ -1,8 +1,6 @@
-#include <assert.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -161,8 +159,10 @@ namespace v4over6 {
             }
             uint16_t tot_len = ntohs(hdr->tot_len);
             uint16_t header_len = hdr->ihl * 4;
-            assert(header_len <= tot_len);
-            assert(read_bytes == tot_len);
+            if (!(header_len <= tot_len && read_bytes == tot_len)) {
+                LOGE("Received a broken IPv4 packet from tunnel");
+                continue;
+            }
 
             Message msg;
             msg.header.type = MSG_TYPE_REQUEST;

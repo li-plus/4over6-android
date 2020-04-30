@@ -7,8 +7,8 @@
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject instance,
-                                                            jstring addr_, jint port) {
+Java_top_liplus_v4over6_vpn_V4over6_connectSocket(JNIEnv *env, jclass type, jstring addr_,
+                                                  jint port) {
     const char *addr = env->GetStringUTFChars(addr_, 0);
 
     int ret = v4over6::connect_socket(addr, port);
@@ -20,27 +20,25 @@ Java_top_liplus_v4over6_activity_MainActivity_connectSocket(JNIEnv *env, jobject
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_disconnectSocket(JNIEnv *env, jobject instance) {
+Java_top_liplus_v4over6_vpn_V4over6_disconnectSocket(JNIEnv *env, jclass type) {
     v4over6::disconnect_socket();
 }
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_requestIpv4Config(JNIEnv *env, jobject instance) {
+Java_top_liplus_v4over6_vpn_V4over6_requestIpv4Config(JNIEnv *env, jclass type) {
     return v4over6::request_ipv4_config();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_setupTunnel(JNIEnv *env, jobject instance,
-                                                          jint tunnel_fd) {
+Java_top_liplus_v4over6_vpn_V4over6_setupTunnel(JNIEnv *env, jclass type, jint tunnel_fd) {
     v4over6::setup_tunnel(tunnel_fd);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject instance,
-                                                            jobject stats) {
+Java_top_liplus_v4over6_vpn_V4over6_getStatistics(JNIEnv *env, jclass type, jobject stats) {
     jclass clazz = env->GetObjectClass(stats);
     jfieldID field_id;
 
@@ -61,8 +59,7 @@ Java_top_liplus_v4over6_activity_MainActivity_getStatistics(JNIEnv *env, jobject
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_getIpv4Config(JNIEnv *env, jobject instance,
-                                                            jobject config) {
+Java_top_liplus_v4over6_vpn_V4over6_getIpv4Config(JNIEnv *env, jclass type, jobject config) {
     v4over6::Ipv4Config native_config = v4over6::get_ipv4_config();
 
     jclass clazz = env->GetObjectClass(config);
@@ -93,8 +90,7 @@ Java_top_liplus_v4over6_activity_MainActivity_getIpv4Config(JNIEnv *env, jobject
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_getServerConfig(JNIEnv *env, jobject instance,
-                                                              jobject config) {
+Java_top_liplus_v4over6_vpn_V4over6_getServerConfig(JNIEnv *env, jclass type, jobject config) {
     v4over6::ServerConfig native_config = v4over6::get_server_config();
 
     jclass clazz = env->GetObjectClass(config);
@@ -112,6 +108,6 @@ Java_top_liplus_v4over6_activity_MainActivity_getServerConfig(JNIEnv *env, jobje
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_top_liplus_v4over6_activity_MainActivity_isRunning(JNIEnv *env, jobject instance) {
+Java_top_liplus_v4over6_vpn_V4over6_isRunning(JNIEnv *env, jclass type) {
     return (jboolean) v4over6::is_running();
 }
