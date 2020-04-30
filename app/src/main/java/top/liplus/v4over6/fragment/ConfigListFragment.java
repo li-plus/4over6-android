@@ -14,7 +14,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,7 +35,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import top.liplus.v4over6.R;
-import top.liplus.v4over6.activity.BaseFragmentActivity;
 import top.liplus.v4over6.adapter.ServerConfigAdapter;
 import top.liplus.v4over6.vpn.Ipv4Config;
 import top.liplus.v4over6.vpn.ServerConfig;
@@ -92,7 +90,7 @@ public class ConfigListFragment extends BaseFragment {
     private Ipv4Config ipv4Config = new Ipv4Config();
     private ConfigListFragment.ConnectionStatus status = ConfigListFragment.ConnectionStatus.NO_CONNECTION;
     private int socketFd = -1;
-    private static Timer statsUpdater = new Timer("statsUpdater");
+    private Timer statsUpdater = null;
     private boolean enableStatsUpdater = false;
     private static long startTime = 0;
 
@@ -143,6 +141,7 @@ public class ConfigListFragment extends BaseFragment {
             switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
         }
 
+        statsUpdater = new Timer("statsUpdater");
         statsUpdater.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -181,6 +180,13 @@ public class ConfigListFragment extends BaseFragment {
         }, 0, 1000);
 
         return root;
+    }
+
+    @Override
+    public void onDestroyView() {
+        Log.i(TAG, "Fuck destroy view");
+        statsUpdater.cancel();
+        super.onDestroyView();
     }
 
     @Override
