@@ -7,7 +7,6 @@ import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +16,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -182,13 +183,13 @@ public class MainActivity extends AppCompatActivity {
 
         // validate user inputs
         if (adapter.selectedIndex < 0) {
-            Toast.makeText(this, "Please select config", Toast.LENGTH_SHORT).show();
+            makeToast("Please select config");
             return;
         }
         ServerConfig config = adapter.getData().get(adapter.selectedIndex);
         if (!validateIpv6Address(config.ipv6)) {
             view.post(() -> {
-                Toast.makeText(this, "Invalid IPv6 address", Toast.LENGTH_SHORT).show();
+                makeToast("Invalid IPv6 address");
                 switchStatus(ConnectionStatus.NO_CONNECTION);
             });
             return;
@@ -212,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         socketFd = connectSocket(addr, port);
         if (socketFd < 0) {
             view.post(() -> {
-                Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
+                makeToast("Cannot connect to server");
                 switchStatus(ConnectionStatus.NO_CONNECTION);
             });
             return;
@@ -222,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         if (ret < 0) {
             disconnectSocket();
             view.post(() -> {
-                Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
+                makeToast("Cannot get ipv4 config");
                 switchStatus(ConnectionStatus.NO_CONNECTION);
             });
             return;
@@ -237,7 +238,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void resetConnectionInfo() {
+    private void makeToast(String text) {
+        Snackbar.make(fabConnect, text, BaseTransientBottomBar.LENGTH_SHORT)
+                .setAnchorView(fabConnect)
+                .show();
+    }
+
+    private void resetConnectionInfo() {
         tvDownloadBytes.setText(String.format(getString(R.string.pattern_bytes), "0 B", 0));
         tvUploadBytes.setText(String.format(getString(R.string.pattern_bytes), "0 B", 0));
         tvUploadSpeed.setText(String.format(getString(R.string.pattern_upload_speed), "0 B"));
@@ -278,9 +285,7 @@ public class MainActivity extends AppCompatActivity {
         }
         setupTunnel(tunnelFd);
         startTime = System.currentTimeMillis();
-//        fabConnect.post(() -> {
-//            Toast.makeText(this, "Successfully connected", Toast.LENGTH_SHORT).show();
-//        });
+        makeToast("Successfully connected");
 //        Set<String> a = new HashSet<>(1);
 //
 //        SharedPreferences.Editor sp =getSharedPreferences(Defs.SP_GLOBAL,  MODE_PRIVATE).edit();
@@ -315,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 startVpn();
             } else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+                makeToast("Permission denied");
                 switchStatus(ConnectionStatus.NO_CONNECTION);
             }
         }

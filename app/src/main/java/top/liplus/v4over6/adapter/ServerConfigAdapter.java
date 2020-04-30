@@ -29,8 +29,6 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
         BaseRecyclerViewHolder vh = new BaseRecyclerViewHolder(parent, R.layout.item_server_config);
         vh.getView().setOnClickListener((View view) -> {
             selectedIndex = vh.getAdapterPosition();
-            ServerConfig selected = getData().get(vh.getAdapterPosition());
-            Toast.makeText(context, "[" + selected.ipv6 + "]:" + selected.port, Toast.LENGTH_SHORT).show();
             notifyDataSetChanged();
         });
         return vh;
