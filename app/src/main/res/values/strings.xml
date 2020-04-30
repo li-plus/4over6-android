@@ -14,4 +14,5 @@
     <string name="pattern_time">%d h %d min %d s</string>
     <string name="connected">Connected</string>
     <string name="no_connection">No Connection</string>
+    <string name="connecting">Connecting</string>
 </resources>

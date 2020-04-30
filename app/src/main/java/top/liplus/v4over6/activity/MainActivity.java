@@ -58,6 +58,16 @@ public class MainActivity extends AppCompatActivity {
     protected TextView tvRunningTime;
     @BindView(R.id.rv_server_config)
     protected RecyclerView rvServerConfig;
+    @BindView(R.id.tv_ipv4)
+    protected TextView tvIpv4;
+    @BindView(R.id.tv_route)
+    protected TextView tvRoute;
+    @BindView(R.id.tv_dns)
+    protected TextView tvDns;
+
+    private enum ConnectionStatus {
+        NO_CONNECTION, CONNECTING, CONNECTED
+    }
 
     private ServerConfigAdapter adapter;
 
@@ -79,50 +89,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        statsUpdater.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (enableStatsUpdater) {
-                    getStatistics(stats);
-                    int deltaUploadBytes = stats.uploadBytes - prevUploadBytes;
-                    int deltaDownloadBytes = stats.downloadBytes - prevDownloadBytes;
-                    prevUploadBytes = stats.uploadBytes;
-                    prevDownloadBytes = stats.downloadBytes;
-
-                    fabConnect.post(() -> {
-                        tvDownloadBytes.setText(String.format(getString(R.string.pattern_bytes),
-                                Formatter.formatFileSize(fabConnect.getContext(), stats.downloadBytes),
-                                stats.downloadPackets));
-                        tvUploadBytes.setText(String.format(getString(R.string.pattern_bytes),
-                                Formatter.formatFileSize(fabConnect.getContext(), stats.uploadBytes),
-                                stats.uploadPackets));
-                        tvUploadSpeed.setText(String.format(getString(R.string.pattern_upload_speed),
-                                Formatter.formatFileSize(fabConnect.getContext(), deltaUploadBytes)));
-                        tvDownloadSpeed.setText(String.format(getString(R.string.pattern_download_speed),
-                                Formatter.formatFileSize(fabConnect.getContext(), deltaDownloadBytes)));
-
-                        long runTimeMs = System.currentTimeMillis() - startTime;
-                        long hours = TimeUnit.MILLISECONDS.toHours(runTimeMs);
-                        long minutes = TimeUnit.MILLISECONDS.toMinutes(runTimeMs) % 60;
-                        long seconds = TimeUnit.MILLISECONDS.toSeconds(runTimeMs) % 60;
-                        tvRunningTime.setText(String.format(getString(R.string.pattern_time),
-                                hours, minutes, seconds));
-                    });
-                }
-            }
-        }, 0, 1000);
-
-
         List<ServerConfig> data = new ArrayList<>();
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c6960000000000000000000000", 5551));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5552));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5553));
+        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5554));
         data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695", 5555));
         data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5556));
         data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5557));
         data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5558));
         data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5559));
         data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5560));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5561));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5562));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5563));
 
         adapter = new ServerConfigAdapter(this, data);
         rvServerConfig.setAdapter(adapter);
@@ -140,14 +117,47 @@ public class MainActivity extends AppCompatActivity {
             getServerConfig(serverConfig);
 //            etAddr.setText(serverConfig.ipv6);
 //            etPort.setText(String.valueOf(serverConfig.port));
-            switchControls(true);
-            enableStatsUpdater = true;
+            switchControls(ConnectionStatus.CONNECTED);
+        } else {
+            switchControls(ConnectionStatus.NO_CONNECTION);
         }
-    }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
+        statsUpdater.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (enableStatsUpdater) {
+                    getStatistics(stats);
+                    int uploadSpeed = stats.uploadBytes - prevUploadBytes;
+                    int downloadSpeed = stats.downloadBytes - prevDownloadBytes;
+                    prevUploadBytes = stats.uploadBytes;
+                    prevDownloadBytes = stats.downloadBytes;
+
+                    fabConnect.post(() -> {
+                        tvDownloadBytes.setText(String.format(getString(R.string.pattern_bytes),
+                                Formatter.formatFileSize(fabConnect.getContext(), stats.downloadBytes),
+                                stats.downloadPackets));
+                        tvUploadBytes.setText(String.format(getString(R.string.pattern_bytes),
+                                Formatter.formatFileSize(fabConnect.getContext(), stats.uploadBytes),
+                                stats.uploadPackets));
+                        tvUploadSpeed.setText(String.format(getString(R.string.pattern_upload_speed),
+                                Formatter.formatFileSize(fabConnect.getContext(), uploadSpeed)));
+                        tvDownloadSpeed.setText(String.format(getString(R.string.pattern_download_speed),
+                                Formatter.formatFileSize(fabConnect.getContext(), downloadSpeed)));
+
+                        long runTimeMs = System.currentTimeMillis() - startTime;
+                        long hours = TimeUnit.MILLISECONDS.toHours(runTimeMs);
+                        long minutes = TimeUnit.MILLISECONDS.toMinutes(runTimeMs) % 60;
+                        long seconds = TimeUnit.MILLISECONDS.toSeconds(runTimeMs) % 60;
+                        tvRunningTime.setText(String.format(getString(R.string.pattern_time),
+                                hours, minutes, seconds));
+
+                        tvIpv4.setText(String.format("IPv4: %s", ipv4Config.ipv4));
+                        tvRoute.setText(String.format("Route: %s", ipv4Config.route));
+                        tvDns.setText(String.format("DNS: %s %s %s", ipv4Config.dns1, ipv4Config.dns2, ipv4Config.dns3));
+                    });
+                }
+            }
+        }, 0, 1000);
     }
 
     @OnClick(R.id.fab_connect)
@@ -162,14 +172,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             isConnected = false;
-            enableStatsUpdater = false;
             prevDownloadBytes = 0;
             prevUploadBytes = 0;
             stats = new Statistics();
             ipv4Config = new Ipv4Config();
             socketFd = -1;
 
-            switchControls(false);
+            switchControls(ConnectionStatus.NO_CONNECTION);
             return;
         }
 
@@ -182,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
         if (!validateIpv6Address(config.ipv6)) {
             view.post(() -> {
                 Toast.makeText(this, "Invalid IPv6 address", Toast.LENGTH_SHORT).show();
-                switchControls(false);
+                switchControls(ConnectionStatus.NO_CONNECTION);
             });
             return;
         }
@@ -198,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
 //        int port = Integer.parseInt(etPort.getText().toString());
 
         // connecting
-        switchControls(true);
+        switchControls(ConnectionStatus.CONNECTING);
 
         Log.i(TAG, "Connecting to [" + addr + "]:" + port);
 
@@ -206,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
         if (socketFd < 0) {
             view.post(() -> {
                 Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show();
-                switchControls(false);
+                switchControls(ConnectionStatus.NO_CONNECTION);
             });
             return;
         }
@@ -216,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
             disconnectSocket();
             view.post(() -> {
                 Toast.makeText(this, "Cannot get ipv4 config", Toast.LENGTH_SHORT).show();
-                switchControls(false);
+                switchControls(ConnectionStatus.NO_CONNECTION);
             });
             return;
         }
@@ -228,6 +237,18 @@ public class MainActivity extends AppCompatActivity {
         } else {
             startVpn();
         }
+    }
+
+    void resetConnectionInfo() {
+        tvDownloadBytes.setText(String.format(getString(R.string.pattern_bytes), "0 B", 0));
+        tvUploadBytes.setText(String.format(getString(R.string.pattern_bytes), "0 B", 0));
+        tvUploadSpeed.setText(String.format(getString(R.string.pattern_upload_speed), "0 B"));
+        tvDownloadSpeed.setText(String.format(getString(R.string.pattern_download_speed), "0 B"));
+        tvRunningTime.setText(String.format(getString(R.string.pattern_time), 0, 0, 0));
+
+        tvIpv4.setText(String.format("IPv4: %s", "-"));
+        tvRoute.setText(String.format("Route: %s", "-"));
+        tvDns.setText(String.format("DNS: %s %s %s", "-", "-", "-"));
     }
 
     private static boolean validateIpv6Address(String addr) {
@@ -268,11 +289,22 @@ public class MainActivity extends AppCompatActivity {
 //        SharedPreferences.Editor sp =getSharedPreferences(Defs.SP_GLOBAL,  MODE_PRIVATE).edit();
 //        sp.putStringSet(Defs.SP_SERVER_CONFIG, );
 //        sp.apply();
-        enableStatsUpdater = true;
+        switchControls(ConnectionStatus.CONNECTED);
     }
 
-    void switchControls(boolean isConnected) {
-        tvConnectStatus.setText(isConnected ? R.string.connected : R.string.no_connection);
+    void switchControls(ConnectionStatus status) {
+        if (status == ConnectionStatus.NO_CONNECTION) {
+            tvConnectStatus.setText(R.string.no_connection);
+            enableStatsUpdater = false;
+            resetConnectionInfo();
+        } else if (status == ConnectionStatus.CONNECTING) {
+            tvConnectStatus.setText(R.string.connecting);
+            enableStatsUpdater = false;
+            resetConnectionInfo();
+        } else {
+            tvConnectStatus.setText(R.string.connected);
+            enableStatsUpdater = true;
+        }
 //        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
 //        etAddr.setEnabled(!isConnected);
 //        etPort.setEnabled(!isConnected);
@@ -285,8 +317,8 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 startVpn();
             } else {
-                switchControls(false);
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+                switchControls(ConnectionStatus.NO_CONNECTION);
             }
         }
     }
