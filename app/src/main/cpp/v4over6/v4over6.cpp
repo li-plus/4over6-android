@@ -238,7 +238,7 @@ namespace v4over6 {
         }
         pthread_mutex_unlock(&config_mutex);
 
-        LOGI("IPv4 config received: %s %s %s %s %s",
+        LOGI("IPv4 config received: IP %s, Route %s, DNS %s, %s, %s",
              config.ip, config.route, config.dns1, config.dns2, config.dns3);
 
         return 0;

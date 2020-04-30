@@ -174,15 +174,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // validate user inputs
-        if (!validateIpv6Address(adapter.selected.ipv6)) {
+        if (adapter.selectedIndex < 0) {
+            Toast.makeText(this, "Please select config", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ServerConfig config = adapter.getData().get(adapter.selectedIndex);
+        if (!validateIpv6Address(config.ipv6)) {
             view.post(() -> {
                 Toast.makeText(this, "Invalid IPv6 address", Toast.LENGTH_SHORT).show();
                 switchControls(false);
             });
             return;
         }
-        String addr = adapter.selected.ipv6;
-        int port = adapter.selected.port;
+        String addr = config.ipv6;
+        int port = config.port;
 //        if (!validatePort(etPort.getText().toString())) {
 //            view.post(() -> {
 //                Toast.makeText(this, "Invalid port", Toast.LENGTH_SHORT).show();
