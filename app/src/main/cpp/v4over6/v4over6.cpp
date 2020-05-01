@@ -60,15 +60,14 @@ namespace v4over6 {
         signal(SIGUSR2, signal_handler);
 
         while (true) {
-            Message msg;
-            ssize_t read_bytes = read_exact(socket_fd, (uint8_t *) &msg.header,
-                                            sizeof(MessageHeader));
+            Msg msg;
+            ssize_t read_bytes = read_exact(socket_fd, (uint8_t *) &msg.header, sizeof(MsgHeader));
             if (read_bytes < 0) {
                 LOGE("Error reading from socket: %s", strerror(errno));
                 continue;
             }
 
-            size_t data_len = msg.header.length - sizeof(MessageHeader);
+            size_t data_len = msg.header.length - sizeof(MsgHeader);
             if (data_len < 0 || data_len > MSG_DATA_SIZE) {
                 continue;
             }
@@ -123,8 +122,8 @@ namespace v4over6 {
             if (last_heartbeat_send == -1 ||
                 current_time - last_heartbeat_send >= 20) {
                 // send heartbeat
-                MessageHeader heartbeat = {
-                        .length = sizeof(MessageHeader),
+                MsgHeader heartbeat = {
+                        .length = sizeof(MsgHeader),
                         .type = MSG_TYPE_HEARTBEAT
                 };
                 if (write(socket_fd, &heartbeat, heartbeat.length) < 0) {
@@ -133,7 +132,7 @@ namespace v4over6 {
                     LOGI("Heartbeat sent");
                     last_heartbeat_send = current_time;
                     stats.out_packets++;
-                    stats.out_bytes += sizeof(MessageHeader);
+                    stats.out_bytes += sizeof(MsgHeader);
                 }
             }
             sleep(1);
@@ -164,9 +163,9 @@ namespace v4over6 {
                 continue;
             }
 
-            Message msg;
+            Msg msg;
             msg.header.type = MSG_TYPE_REQUEST;
-            msg.header.length = tot_len + sizeof(MessageHeader);
+            msg.header.length = tot_len + sizeof(MsgHeader);
             memcpy(msg.data, buffer, tot_len);
             if (write(socket_fd, &msg, msg.header.length) < 0) {
                 LOGE("Error writing to socket: %s", strerror(errno));
@@ -219,7 +218,7 @@ namespace v4over6 {
     int request_ipv4_config() {
 
         // send request
-        MessageHeader ip_request = {.length = sizeof(MessageHeader), .type = MSG_TYPE_IP_REQUEST};
+        MsgHeader ip_request = {.length = sizeof(MsgHeader), .type = MSG_TYPE_IP_REQUEST};
         if (write(socket_fd, &ip_request, ip_request.length) < 0) {
             LOGE("Failed to send IPv4 config request: %s", strerror(errno));
             return -1;
@@ -275,6 +274,8 @@ namespace v4over6 {
             socket_fd = -1;
             LOGI("IPv6 socket closed");
         }
+
+        tunnel_fd = -1;
     }
 
     void setup_tunnel(int tunnel_fd_) {
@@ -296,6 +297,10 @@ namespace v4over6 {
     }
 
     bool is_running() {
-        return socket_fd != -1;
+        return socket_fd != -1 && tunnel_fd != -1;
+    }
+
+    bool is_connecting() {
+        return socket_fd != -1 && tunnel_fd == -1;
     }
 }

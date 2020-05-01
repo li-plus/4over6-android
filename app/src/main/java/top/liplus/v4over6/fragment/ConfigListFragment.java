@@ -84,7 +84,7 @@ public class ConfigListFragment extends BaseFragment {
     private int prevUploadBytes = 0;
     private Statistics stats = new Statistics();
     private Ipv4Config ipv4Config = new Ipv4Config();
-    private ConfigListFragment.ConnectionStatus status = ConfigListFragment.ConnectionStatus.NO_CONNECTION;
+    private ConnectionStatus status = ConnectionStatus.NO_CONNECTION;
     private int socketFd = -1;
     private Timer statsUpdater = null;
     private boolean enableStatsUpdater = false;
@@ -121,9 +121,11 @@ public class ConfigListFragment extends BaseFragment {
             V4over6.getIpv4Config(ipv4Config);
             ServerConfig serverConfig = new ServerConfig();
             V4over6.getServerConfig(serverConfig);
-            switchStatus(ConfigListFragment.ConnectionStatus.CONNECTED);
+            switchStatus(ConnectionStatus.CONNECTED);
+        } else if (V4over6.isConnecting()) {
+            switchStatus(ConnectionStatus.CONNECTING);
         } else {
-            switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
+            switchStatus(ConnectionStatus.NO_CONNECTION);
         }
 
         statsUpdater = new Timer("statsUpdater");
@@ -180,7 +182,11 @@ public class ConfigListFragment extends BaseFragment {
 
     @OnClick(R.id.fab_connect)
     void handleClickConnect(View view) {
-        if (status == ConfigListFragment.ConnectionStatus.CONNECTED) {
+        if (status == ConnectionStatus.CONNECTING) {
+            makeToast("Please wait for the connection");
+            return;
+        }
+        if (status == ConnectionStatus.CONNECTED) {
             V4over6.disconnectSocket();
             try {
                 vpnService.stop();
@@ -195,7 +201,7 @@ public class ConfigListFragment extends BaseFragment {
             ipv4Config = new Ipv4Config();
             socketFd = -1;
 
-            switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
+            switchStatus(ConnectionStatus.NO_CONNECTION);
             return;
         }
 
@@ -207,36 +213,40 @@ public class ConfigListFragment extends BaseFragment {
         ServerConfig config = adapter.getData().get(adapter.selectedIndex);
 
         // connecting
-        switchStatus(ConfigListFragment.ConnectionStatus.CONNECTING);
+        switchStatus(ConnectionStatus.CONNECTING);
 
         Log.i(TAG, "Connecting to [" + config.ipv6 + "]:" + config.port);
 
-        socketFd = V4over6.connectSocket(config.ipv6, config.port);
-        if (socketFd < 0) {
-            view.post(() -> {
-                makeToast("Cannot connect to server");
-                switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
-            });
-            return;
-        }
+        new Thread(() -> {
+            socketFd = V4over6.connectSocket(config.ipv6, config.port);
+            if (socketFd < 0) {
+                view.post(() -> {
+                    makeToast("Cannot connect to server");
+                    switchStatus(ConnectionStatus.NO_CONNECTION);
+                });
+                return;
+            }
 
-        int ret = V4over6.requestIpv4Config();
-        if (ret < 0) {
-            V4over6.disconnectSocket();
-            view.post(() -> {
-                makeToast("Cannot get ipv4 config");
-                switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
-            });
-            return;
-        }
-        V4over6.getIpv4Config(ipv4Config);
+            int ret = V4over6.requestIpv4Config();
+            if (ret < 0) {
+                V4over6.disconnectSocket();
+                view.post(() -> {
+                    makeToast("Cannot get ipv4 config");
+                    switchStatus(ConnectionStatus.NO_CONNECTION);
+                });
+                return;
+            }
+            V4over6.getIpv4Config(ipv4Config);
 
-        Intent vpnIndent = VpnService.prepare(getContext());
-        if (vpnIndent != null) {
-            startActivityForResult(vpnIndent, 0);
-        } else {
-            startVpn();
-        }
+            fabConnect.post(() -> {
+                Intent vpnIndent = VpnService.prepare(getContext());
+                if (vpnIndent != null) {
+                    startActivityForResult(vpnIndent, 0);
+                } else {
+                    startVpn();
+                }
+            });
+        }).start();
     }
 
     private void makeToast(String text) {
@@ -268,24 +278,24 @@ public class ConfigListFragment extends BaseFragment {
         V4over6.setupTunnel(tunnelFd);
         startTime = System.currentTimeMillis();
         makeToast("Successfully connected");
-        switchStatus(ConfigListFragment.ConnectionStatus.CONNECTED);
+        switchStatus(ConnectionStatus.CONNECTED);
     }
 
-    void switchStatus(ConfigListFragment.ConnectionStatus status) {
+    void switchStatus(ConnectionStatus status) {
         this.status = status;
-        if (status == ConfigListFragment.ConnectionStatus.NO_CONNECTION) {
+        if (status == ConnectionStatus.NO_CONNECTION) {
             tvConnectStatus.setText(R.string.no_connection);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.red_9));
             enableStatsUpdater = false;
             fabConnect.setEnabled(true);
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.gray_b)));
             resetConnectionInfo();
-        } else if (status == ConfigListFragment.ConnectionStatus.CONNECTING) {
+        } else if (status == ConnectionStatus.CONNECTING) {
             tvConnectStatus.setText(R.string.connecting);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.yellow_9));
             enableStatsUpdater = false;
             fabConnect.setEnabled(false);
-            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connected_green)));
+            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
             resetConnectionInfo();
         } else {
             tvConnectStatus.setText(R.string.connected);
@@ -304,7 +314,7 @@ public class ConfigListFragment extends BaseFragment {
                 startVpn();
             } else {
                 makeToast("Permission denied");
-                switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
+                switchStatus(ConnectionStatus.NO_CONNECTION);
             }
         }
     }

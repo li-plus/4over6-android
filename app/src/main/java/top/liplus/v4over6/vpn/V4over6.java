@@ -20,4 +20,6 @@ public class V4over6 {
     public static native void getServerConfig(ServerConfig config);
 
     public static native boolean isRunning();
+
+    public static native boolean isConnecting();
 }
