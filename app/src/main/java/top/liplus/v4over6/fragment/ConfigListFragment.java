@@ -25,7 +25,6 @@ import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,6 +35,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import top.liplus.v4over6.R;
 import top.liplus.v4over6.adapter.ServerConfigAdapter;
+import top.liplus.v4over6.common.GlobalConfig;
 import top.liplus.v4over6.vpn.Ipv4Config;
 import top.liplus.v4over6.vpn.ServerConfig;
 import top.liplus.v4over6.vpn.Statistics;
@@ -47,10 +47,6 @@ import static android.app.Activity.RESULT_OK;
 public class ConfigListFragment extends BaseFragment {
     private static final String TAG = ConfigListFragment.class.getSimpleName();
 
-    //    @BindView(R.id.et_server_addr)
-//    protected EditText etAddr;
-//    @BindView(R.id.et_server_port)
-//    protected EditText etPort;
     @BindView(R.id.fab_connect)
     protected FloatingActionButton fabConnect;
     @BindView(R.id.tv_download_bytes)
@@ -100,19 +96,10 @@ public class ConfigListFragment extends BaseFragment {
         View root = inflater.inflate(R.layout.fragment_config_list, container, false);
         ButterKnife.bind(this, root);
 
-        List<ServerConfig> data = new ArrayList<>();
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c6960000000000000000000000", 5551));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5552));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5553));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5554));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695", 5555));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c696", 5556));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5557));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5558));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5559));
-        data.add(new ServerConfig("240e:360:6f0b:6a00:1e77:2bd4:d4f3:c697", 5560));
+        List<ServerConfig> data = GlobalConfig.getServerConfigs(getContext());
+        int configIndex = GlobalConfig.getConfigIndex(getContext());
 
-        adapter = new ServerConfigAdapter(getContext(), data);
+        adapter = new ServerConfigAdapter(getBaseFragmentActivity(), data, configIndex);
         rvServerConfig.setAdapter(adapter);
         rvServerConfig.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
         rvServerConfig.addItemDecoration(new DividerItemDecoration(rvServerConfig.getContext(), LinearLayoutManager.VERTICAL));
@@ -134,8 +121,6 @@ public class ConfigListFragment extends BaseFragment {
             V4over6.getIpv4Config(ipv4Config);
             ServerConfig serverConfig = new ServerConfig();
             V4over6.getServerConfig(serverConfig);
-//            etAddr.setText(serverConfig.ipv6);
-//            etPort.setText(String.valueOf(serverConfig.port));
             switchStatus(ConfigListFragment.ConnectionStatus.CONNECTED);
         } else {
             switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
@@ -184,7 +169,6 @@ public class ConfigListFragment extends BaseFragment {
 
     @Override
     public void onDestroyView() {
-        Log.i(TAG, "Fuck destroy view");
         statsUpdater.cancel();
         super.onDestroyView();
     }
@@ -217,34 +201,17 @@ public class ConfigListFragment extends BaseFragment {
 
         // validate user inputs
         if (adapter.selectedIndex < 0) {
-            makeToast("Please select server");
+            makeToast("Please select a config");
             return;
         }
         ServerConfig config = adapter.getData().get(adapter.selectedIndex);
-        if (!validateIpv6Address(config.ipv6)) {
-            view.post(() -> {
-                makeToast("Invalid IPv6 address");
-                switchStatus(ConfigListFragment.ConnectionStatus.NO_CONNECTION);
-            });
-            return;
-        }
-        String addr = config.ipv6;
-        int port = config.port;
-//        if (!validatePort(etPort.getText().toString())) {
-//            view.post(() -> {
-//                Toast.makeText(this, "Invalid port", Toast.LENGTH_SHORT).show();
-//                switchStatus(false);
-//            });
-//            return;
-//        }
-//        int port = Integer.parseInt(etPort.getText().toString());
 
         // connecting
         switchStatus(ConfigListFragment.ConnectionStatus.CONNECTING);
 
-        Log.i(TAG, "Connecting to [" + addr + "]:" + port);
+        Log.i(TAG, "Connecting to [" + config.ipv6 + "]:" + config.port);
 
-        socketFd = V4over6.connectSocket(addr, port);
+        socketFd = V4over6.connectSocket(config.ipv6, config.port);
         if (socketFd < 0) {
             view.post(() -> {
                 makeToast("Cannot connect to server");
@@ -290,25 +257,6 @@ public class ConfigListFragment extends BaseFragment {
         tvDns.setText(String.format("DNS: %s %s %s", "-", "-", "-"));
     }
 
-    private static boolean validateIpv6Address(String addr) {
-//        try {
-//            Inet6Address.getByName(addr);
-//            return true;
-//        } catch (UnknownHostException e) {
-//            return false;
-//        }
-        return !addr.isEmpty() && addr.length() < 40;
-    }
-
-    private static boolean validatePort(String port) {
-        try {
-            int portInt = Integer.parseInt(port);
-            return 0 <= portInt && portInt < 65536;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
     private void startVpn() {
         Log.d(TAG, "Starting VPN service");
         vpnService.protect(socketFd);
@@ -320,11 +268,6 @@ public class ConfigListFragment extends BaseFragment {
         V4over6.setupTunnel(tunnelFd);
         startTime = System.currentTimeMillis();
         makeToast("Successfully connected");
-//        Set<String> a = new HashSet<>(1);
-//
-//        SharedPreferences.Editor sp =getSharedPreferences(Defs.SP_GLOBAL,  MODE_PRIVATE).edit();
-//        sp.putStringSet(Defs.SP_SERVER_CONFIG, );
-//        sp.apply();
         switchStatus(ConfigListFragment.ConnectionStatus.CONNECTED);
     }
 
@@ -351,9 +294,6 @@ public class ConfigListFragment extends BaseFragment {
             fabConnect.setEnabled(true);
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connected_green)));
         }
-//        btnConnect.setText(isConnected ? R.string.disconnect : R.string.connect);
-//        etAddr.setEnabled(!isConnected);
-//        etPort.setEnabled(!isConnected);
     }
 
     @Override

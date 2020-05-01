@@ -19,4 +19,5 @@
     <string name="connected">Connected</string>
     <string name="no_connection">No Connection</string>
     <string name="connecting">Connecting</string>
+    <string name="new_config">New Config</string>
 </resources>

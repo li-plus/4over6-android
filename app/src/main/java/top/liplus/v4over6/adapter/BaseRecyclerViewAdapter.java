@@ -20,17 +20,17 @@ abstract public class BaseRecyclerViewAdapter<T, VH extends RecyclerView.ViewHol
         return data;
     }
 
-    public void insertItemImmediately(int position, T item) {
+    public void insertItemImmediate(int position, T item) {
         data.add(position, item);
         notifyItemInserted(position);
     }
 
-    public void insertItemImmediately(T item) {
+    public void insertItemImmediate(T item) {
         data.add(item);
         notifyItemInserted(data.size() - 1);
     }
 
-    public T removeItemImmediately(int position) {
+    public T removeItemImmediate(int position) {
         T bak = data.remove(position);
         notifyItemRemoved(position);
         return bak;

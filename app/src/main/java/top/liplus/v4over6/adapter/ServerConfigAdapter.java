@@ -1,6 +1,5 @@
 package top.liplus.v4over6.adapter;
 
-import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
@@ -11,15 +10,19 @@ import androidx.annotation.NonNull;
 import java.util.List;
 
 import top.liplus.v4over6.R;
+import top.liplus.v4over6.activity.BaseFragmentActivity;
+import top.liplus.v4over6.common.GlobalConfig;
+import top.liplus.v4over6.fragment.NewConfigFragment;
 import top.liplus.v4over6.vpn.ServerConfig;
 
 public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, BaseRecyclerViewAdapter.BaseRecyclerViewHolder> {
-    private Context context;
-    public int selectedIndex = -1;
+    private BaseFragmentActivity activity;
+    public int selectedIndex;
 
-    public ServerConfigAdapter(Context context, List<ServerConfig> data) {
+    public ServerConfigAdapter(BaseFragmentActivity activity, List<ServerConfig> data, int configIndex) {
         super(data);
-        this.context = context;
+        this.activity = activity;
+        this.selectedIndex = configIndex;
     }
 
     @NonNull
@@ -29,7 +32,9 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
         vh.getView().setOnClickListener((View view) -> {
             notifyItemChanged(selectedIndex);
             selectedIndex = vh.getAdapterPosition();
+            GlobalConfig.setConfigIndex(activity, selectedIndex);
             ((RadioButton) vh.findViewById(R.id.rb_curr_config)).setChecked(true);
+            notifyItemChanged(selectedIndex);
         });
         return vh;
     }
@@ -49,12 +54,13 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
             } else if (holder.getAdapterPosition() < selectedIndex) {
                 selectedIndex -= 1;
             }
-            removeItemImmediately(holder.getAdapterPosition());
+            removeItemImmediate(holder.getAdapterPosition());
+            GlobalConfig.setServerConfigs(activity, getData());
         });
 
         // setup edit handler
         holder.findViewById(R.id.iv_edit).setOnClickListener((View view) -> {
-
+            activity.startFragment(new NewConfigFragment());
         });
     }
 }

@@ -22,13 +22,17 @@ public abstract class BaseFragmentActivity extends FragmentActivity {
                 .commit();
     }
 
-    @Override
-    public void onBackPressed() {
+    public void stopFragment() {
         FragmentManager manager = getSupportFragmentManager();
         if (manager.getBackStackEntryCount() > 1) {
             manager.popBackStackImmediate();
         } else {
             finish();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        stopFragment();
     }
 }
