@@ -43,8 +43,8 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
     public void onBindViewHolder(@NonNull BaseRecyclerViewAdapter.BaseRecyclerViewHolder holder, int position) {
         ServerConfig config = getData().get(position);
         // setup server address and port
-        ((TextView) holder.findViewById(R.id.tv_server_addr)).setText(config.ipv6);
-        ((TextView) holder.findViewById(R.id.tv_server_port)).setText(String.valueOf(config.port));
+        ((TextView) holder.findViewById(R.id.tv_server_name)).setText(config.name);
+        ((TextView) holder.findViewById(R.id.tv_server_addr_port)).setText(String.format("[%s]:%d", config.ipv6, config.port));
         // setup radio button
         ((RadioButton) holder.findViewById(R.id.rb_curr_config)).setChecked(selectedIndex == position);
         // setup delete handler

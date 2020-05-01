@@ -23,13 +23,13 @@ public class GlobalConfig {
     }
 
     public static List<ServerConfig> getServerConfigs(@NonNull Context ctx) {
-        List<ServerConfig> serverConfigs = new ArrayList<>();
-
         SharedPreferences sp = ctx.getSharedPreferences(Defs.KEY_GLOBAL, Context.MODE_PRIVATE);
         String strConfigs = sp.getString(Defs.KEY_SERVER_CONFIGS, "");
         if (strConfigs.isEmpty()) {
             return new ArrayList<>();
         }
+
+        List<ServerConfig> serverConfigs = new ArrayList<>();
         for (String strConfig : strConfigs.split("\n\n")) {
             String[] serverInfo = strConfig.split("\n");
             if (serverInfo.length != 3) {
