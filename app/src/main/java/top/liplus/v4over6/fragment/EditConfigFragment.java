@@ -1,6 +1,7 @@
 package top.liplus.v4over6.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,7 +23,9 @@ import top.liplus.v4over6.R;
 import top.liplus.v4over6.common.GlobalConfig;
 import top.liplus.v4over6.vpn.ServerConfig;
 
-public class EditConfigFragment extends BaseFragment {
+public class EditConfigFragment extends BaseFragment implements OnShowToastListener {
+    public static final String TAG = EditConfigFragment.class.getSimpleName();
+
     @BindView(R.id.et_server_name)
     protected EditText etServerName;
     @BindView(R.id.et_server_addr)
@@ -46,19 +49,18 @@ public class EditConfigFragment extends BaseFragment {
         mtTopBar.setOnMenuItemClickListener((MenuItem item) -> {
             if (item.getItemId() == R.id.menu_done) {
                 // check inputs
+                if (!validateServerName(etServerName.getText().toString())) {
+                    showToast("Invalid Server Name");
+                    return false;
+                }
                 if (!validateIpv6Address(etServerAddr.getText().toString())) {
-                    makeToast("Invalid IPv6 Address");
+                    showToast("Invalid IPv6 Address");
                     return false;
                 }
                 if (!validatePort(etServerPort.getText().toString())) {
-                    makeToast("Invalid Port");
+                    showToast("Invalid Port");
                     return false;
                 }
-                if (!validateServerName(etServerName.getText().toString())) {
-                    makeToast("Invalid Server Name");
-                    return false;
-                }
-
                 String name = etServerName.getText().toString();
                 String addr = etServerAddr.getText().toString();
                 int port = Integer.parseInt(etServerPort.getText().toString());
@@ -69,13 +71,13 @@ public class EditConfigFragment extends BaseFragment {
                 if (configIndex < 0) {
                     // create new config
                     serverConfigs.add(config);
-                    makeToast("New config created");
+                    showToast("New config created");
                 } else if (configIndex < serverConfigs.size()) {
                     // update config
                     serverConfigs.set(configIndex, config);
-                    makeToast("Config updated");
+                    showToast("Config updated");
                 } else {
-                    makeToast("Internal error");
+                    showToast("Internal error");
                 }
                 GlobalConfig.setServerConfigs(getContext(), serverConfigs);
                 getBaseFragmentActivity().stopFragment();
@@ -85,11 +87,12 @@ public class EditConfigFragment extends BaseFragment {
             }
         });
         mtTopBar.setTitle(configIndex < 0 ? R.string.new_config : R.string.edit_config);
-
+        Log.i(TAG, "Editing config " + configIndex);
         return root;
     }
 
-    private void makeToast(String text) {
+    @Override
+    public void showToast(String text) {
         Snackbar.make(getView(), text, BaseTransientBottomBar.LENGTH_SHORT).show();
     }
 

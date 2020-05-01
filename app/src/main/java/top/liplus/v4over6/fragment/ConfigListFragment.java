@@ -44,7 +44,7 @@ import top.liplus.v4over6.vpn.VpnService4Over6;
 
 import static android.app.Activity.RESULT_OK;
 
-public class ConfigListFragment extends BaseFragment {
+public class ConfigListFragment extends BaseFragment implements OnShowToastListener {
     private static final String TAG = ConfigListFragment.class.getSimpleName();
 
     @BindView(R.id.fab_connect)
@@ -99,10 +99,10 @@ public class ConfigListFragment extends BaseFragment {
         List<ServerConfig> data = GlobalConfig.getServerConfigs(getContext());
         int configIndex = GlobalConfig.getConfigIndex(getContext());
 
-        adapter = new ServerConfigAdapter(getBaseFragmentActivity(), data, configIndex);
+        adapter = new ServerConfigAdapter(this, data, configIndex);
         rvServerConfig.setAdapter(adapter);
         rvServerConfig.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
-        rvServerConfig.addItemDecoration(new DividerItemDecoration(rvServerConfig.getContext(), LinearLayoutManager.VERTICAL));
+        rvServerConfig.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
         rvServerConfig.setItemAnimator(new DefaultItemAnimator());
 
         mtTopBar.setOnMenuItemClickListener((MenuItem item) -> {
@@ -181,7 +181,7 @@ public class ConfigListFragment extends BaseFragment {
     @OnClick(R.id.fab_connect)
     void handleClickConnect(View view) {
         if (status == ConnectionStatus.CONNECTING) {
-            makeToast("Please be patient while connecting");
+            showToast("Please be patient while connecting");
             return;
         }
         if (status == ConnectionStatus.CONNECTED) {
@@ -205,7 +205,7 @@ public class ConfigListFragment extends BaseFragment {
 
         // validate user inputs
         if (adapter.selectedIndex < 0) {
-            makeToast("Please select a config");
+            showToast("Please select a config");
             return;
         }
         ServerConfig config = adapter.getData().get(adapter.selectedIndex);
@@ -242,11 +242,12 @@ public class ConfigListFragment extends BaseFragment {
 
     private void handleConnectionFailed(String message) {
         V4over6.disconnectSocket();
-        makeToast(message);
+        showToast(message);
         switchStatus(ConnectionStatus.NO_CONNECTION);
     }
 
-    private void makeToast(String text) {
+    @Override
+    public void showToast(String text) {
         Snackbar.make(fabConnect, text, BaseTransientBottomBar.LENGTH_SHORT)
                 .setAnchorView(fabConnect)
                 .show();
@@ -274,7 +275,7 @@ public class ConfigListFragment extends BaseFragment {
         }
         V4over6.setupTunnel(tunnelFd);
         startTime = System.currentTimeMillis();
-        makeToast("Successfully connected");
+        showToast("Successfully connected");
         switchStatus(ConnectionStatus.CONNECTED);
     }
 
@@ -285,19 +286,23 @@ public class ConfigListFragment extends BaseFragment {
             tvConnectStatus.setTextColor(getContext().getColor(R.color.red_9));
             enableStatsUpdater = false;
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.gray_b)));
+            adapter.isIdle = true;
             resetConnectionInfo();
         } else if (status == ConnectionStatus.CONNECTING) {
             tvConnectStatus.setText(R.string.connecting);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.yellow_9));
             enableStatsUpdater = false;
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
+            adapter.isIdle = false;
             resetConnectionInfo();
         } else {
             tvConnectStatus.setText(R.string.connected);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.green_9));
             enableStatsUpdater = true;
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connected_green)));
+            adapter.isIdle = false;
         }
+        adapter.notifyDataSetChanged();
     }
 
     @Override

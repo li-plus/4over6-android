@@ -1,7 +1,9 @@
 package top.liplus.v4over6.adapter;
 
+import android.content.res.ColorStateList;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
@@ -10,18 +12,20 @@ import androidx.annotation.NonNull;
 import java.util.List;
 
 import top.liplus.v4over6.R;
-import top.liplus.v4over6.activity.BaseFragmentActivity;
 import top.liplus.v4over6.common.GlobalConfig;
+import top.liplus.v4over6.fragment.BaseFragment;
 import top.liplus.v4over6.fragment.EditConfigFragment;
+import top.liplus.v4over6.fragment.OnShowToastListener;
 import top.liplus.v4over6.vpn.ServerConfig;
 
 public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, BaseRecyclerViewAdapter.BaseRecyclerViewHolder> {
-    private BaseFragmentActivity activity;
+    private BaseFragment fragment;
     public int selectedIndex;
+    public boolean isIdle;
 
-    public ServerConfigAdapter(BaseFragmentActivity activity, List<ServerConfig> data, int configIndex) {
+    public ServerConfigAdapter(BaseFragment fragment, List<ServerConfig> data, int configIndex) {
         super(data);
-        this.activity = activity;
+        this.fragment = fragment;
         this.selectedIndex = configIndex;
     }
 
@@ -30,11 +34,15 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
     public BaseRecyclerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         BaseRecyclerViewHolder vh = new BaseRecyclerViewHolder(parent, R.layout.item_server_config);
         vh.getView().setOnClickListener((View view) -> {
-            notifyItemChanged(selectedIndex);
-            selectedIndex = vh.getAdapterPosition();
-            GlobalConfig.setConfigIndex(activity, selectedIndex);
-            ((RadioButton) vh.findViewById(R.id.rb_curr_config)).setChecked(true);
-            notifyItemChanged(selectedIndex);
+            if (isIdle) {
+                notifyItemChanged(selectedIndex);
+                selectedIndex = vh.getAdapterPosition();
+                GlobalConfig.setConfigIndex(fragment.getContext(), selectedIndex);
+                ((RadioButton) vh.findViewById(R.id.rb_curr_config)).setChecked(true);
+                notifyItemChanged(selectedIndex);
+            } else {
+                ((OnShowToastListener) fragment).showToast("Please disconnect first");
+            }
         });
         return vh;
     }
@@ -48,19 +56,28 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
         // setup radio button
         ((RadioButton) holder.findViewById(R.id.rb_curr_config)).setChecked(selectedIndex == position);
         // setup delete handler
-        holder.findViewById(R.id.iv_delete).setOnClickListener((View view) -> {
+        ImageView ivDelete = (ImageView) holder.findViewById(R.id.iv_delete);
+        setEnabledImageView(ivDelete, isIdle || selectedIndex != position);
+        ivDelete.setOnClickListener((View view) -> {
             if (selectedIndex == holder.getAdapterPosition()) {
                 selectedIndex = -1;
             } else if (holder.getAdapterPosition() < selectedIndex) {
                 selectedIndex -= 1;
             }
             removeItemImmediate(holder.getAdapterPosition());
-            GlobalConfig.setServerConfigs(activity, getData());
+            GlobalConfig.setServerConfigs(fragment.getContext(), getData());
+            GlobalConfig.setConfigIndex(fragment.getContext(), selectedIndex);
         });
-
         // setup edit handler
-        holder.findViewById(R.id.iv_edit).setOnClickListener((View view) -> {
-            activity.startFragment(new EditConfigFragment(position));
+        ImageView ivEdit = (ImageView) holder.findViewById(R.id.iv_edit);
+        setEnabledImageView(ivEdit, isIdle || selectedIndex != position);
+        ivEdit.setOnClickListener((View view) -> {
+            fragment.getBaseFragmentActivity().startFragment(new EditConfigFragment(position));
         });
+    }
+
+    private void setEnabledImageView(ImageView iv, boolean enabled) {
+        iv.setEnabled(enabled);
+        iv.setImageTintList(ColorStateList.valueOf(fragment.getContext().getColor(enabled ? R.color.gray_0 : R.color.gray_b)));
     }
 }
