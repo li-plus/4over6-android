@@ -86,7 +86,14 @@ public class EditConfigFragment extends BaseFragment implements OnShowToastListe
                 return false;
             }
         });
+        List<ServerConfig> serverConfigs = GlobalConfig.getServerConfigs(getContext());
         mtTopBar.setTitle(configIndex < 0 ? R.string.new_config : R.string.edit_config);
+        if (0 <= configIndex && configIndex < serverConfigs.size()) {
+            ServerConfig config = serverConfigs.get(configIndex);
+            etServerName.setText(config.name);
+            etServerAddr.setText(config.ipv6);
+            etServerPort.setText(String.valueOf(config.port));
+        }
         Log.i(TAG, "Editing config " + configIndex);
         return root;
     }
