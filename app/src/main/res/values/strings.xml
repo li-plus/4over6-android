@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">V4over6</string>
     <string name="server_name">Server Name</string>
-    <string name="server_name_example">e.g. My fantastic VPN</string>
+    <string name="server_name_example">e.g. A Great VPN</string>
     <string name="server_addr">Server IPv6 Address</string>
     <string name="server_port">Server Port</string>
     <string name="server_addr_example">e.g. 2001:db8::23:8:800:417a</string>

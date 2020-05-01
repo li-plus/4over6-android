@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/menu_top_bar"
-            app:title="4over6" />
+            app:title="V4over6" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -151,6 +151,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_anchor="@id/bar_stats"
-        app:srcCompat="@drawable/ic_action_connect" />
+        app:srcCompat="@drawable/ic_action_connect"
+        app:tint="@android:color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

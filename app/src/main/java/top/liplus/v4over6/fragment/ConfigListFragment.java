@@ -285,7 +285,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             tvConnectStatus.setText(R.string.no_connection);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.red_9));
             enableStatsUpdater = false;
-            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.gray_b)));
+            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.disconnected_red)));
             adapter.isIdle = true;
             resetConnectionInfo();
         } else if (status == ConnectionStatus.CONNECTING) {

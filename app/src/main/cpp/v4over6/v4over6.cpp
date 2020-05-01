@@ -152,7 +152,7 @@ namespace v4over6 {
             }
             struct iphdr *hdr = (struct iphdr *) buffer;
             if (hdr->version != 4) {
-                LOGE("Received an IPv6 packet from tunnel");
+                LOGE("Received an IPv%d packet from tunnel", hdr->version);
                 continue;
             }
             uint16_t tot_len = ntohs(hdr->tot_len);

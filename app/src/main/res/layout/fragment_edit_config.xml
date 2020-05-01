@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16sp">
+        android:padding="12sp">
 
         <TextView
             android:layout_width="match_parent"
@@ -35,8 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/server_name_example"
-            android:inputType="text"
-            android:text="VPN" />
+            android:inputType="text" />
 
         <TextView
             android:layout_width="match_parent"
@@ -49,8 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/server_addr_example"
-            android:inputType="text"
-            android:text="240e:360:6f0b:6a00:1e77:2bd4:d4f3:c695" />
+            android:inputType="text" />
 
         <TextView
             android:layout_width="match_parent"
@@ -64,7 +62,6 @@
             android:layout_height="wrap_content"
             android:hint="@string/server_port_example"
             android:inputType="number"
-            android:tag="@string/server_port"
-            android:text="5555" />
+            android:tag="@string/server_port" />
     </LinearLayout>
 </LinearLayout>
