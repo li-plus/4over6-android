@@ -89,24 +89,6 @@ Java_top_liplus_v4over6_vpn_V4over6_getIpv4Config(JNIEnv *env, jclass type, jobj
 }
 
 extern "C"
-JNIEXPORT void JNICALL
-Java_top_liplus_v4over6_vpn_V4over6_getServerConfig(JNIEnv *env, jclass type, jobject config) {
-    v4over6::ServerConfig native_config = v4over6::get_server_config();
-
-    jclass clazz = env->GetObjectClass(config);
-
-    jfieldID field_id;
-    jstring jstr;
-
-    field_id = env->GetFieldID(clazz, "ipv6", "Ljava/lang/String;");
-    jstr = env->NewStringUTF(native_config.ipv6);
-    env->SetObjectField(config, field_id, jstr);
-
-    field_id = env->GetFieldID(clazz, "port", "I");
-    env->SetIntField(config, field_id, native_config.port);
-}
-
-extern "C"
 JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_vpn_V4over6_isRunning(JNIEnv *env, jclass type) {
     return (jboolean) v4over6::is_running();

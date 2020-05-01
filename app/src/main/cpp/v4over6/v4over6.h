@@ -18,11 +18,6 @@ namespace v4over6 {
         int in_packets = 0;
     };
 
-    struct ServerConfig {
-        char ipv6[64] = "\0";
-        int port = -1;
-    };
-
     int connect_socket(const char *addr, int port);
 
     int request_ipv4_config();
@@ -32,8 +27,6 @@ namespace v4over6 {
     void setup_tunnel(int tun_fd);
 
     Ipv4Config get_ipv4_config();
-
-    ServerConfig get_server_config();
 
     Statistics get_statistics();
 

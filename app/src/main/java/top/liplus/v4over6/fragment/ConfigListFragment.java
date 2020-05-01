@@ -119,8 +119,6 @@ public class ConfigListFragment extends BaseFragment {
             prevDownloadBytes = stats.downloadBytes;
             prevUploadBytes = stats.uploadBytes;
             V4over6.getIpv4Config(ipv4Config);
-            ServerConfig serverConfig = new ServerConfig();
-            V4over6.getServerConfig(serverConfig);
             switchStatus(ConnectionStatus.CONNECTED);
         } else if (V4over6.isConnecting()) {
             switchStatus(ConnectionStatus.CONNECTING);
