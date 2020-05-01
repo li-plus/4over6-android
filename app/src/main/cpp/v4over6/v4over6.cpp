@@ -23,6 +23,7 @@ namespace v4over6 {
     static Statistics stats;
 
     static int socket_fd = -1, tunnel_fd = -1;
+    static bool working = false;
 
     static pthread_cond_t config_cond = PTHREAD_COND_INITIALIZER;
     static pthread_mutex_t config_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -47,18 +48,11 @@ namespace v4over6 {
         return count;
     }
 
-    static void signal_handler(int signal) {
-        if (signal == SIGUSR2) {
-            pthread_exit(EXIT_SUCCESS);
-        }
-    }
-
     // forward packets from socket to tunnel
     static void *receive_thread(void *args) {
         LOGI("Receive thread started");
-        signal(SIGUSR2, signal_handler);
 
-        while (true) {
+        while (working) {
             Msg msg;
             ssize_t read_bytes = read_exact(socket_fd, (uint8_t *) &msg.header, sizeof(MsgHeader));
             if (read_bytes < 0) {
@@ -106,10 +100,9 @@ namespace v4over6 {
     // handle heartbeat
     static void *timer_thread(void *args) {
         LOGI("Timer thread started");
-        signal(SIGUSR2, signal_handler);
         last_heartbeat_recv = time(NULL);
 
-        while (true) {
+        while (working) {
             time_t current_time = time(NULL);
             if (last_heartbeat_recv != -1 && current_time - last_heartbeat_recv > 60) {
                 // close connection
@@ -142,10 +135,9 @@ namespace v4over6 {
     // forward packets from tunnel to socket
     static void *forward_thread(void *args) {
         LOGI("Forward thread started");
-        signal(SIGUSR2, signal_handler);
         uint8_t buffer[MSG_DATA_SIZE];
 
-        while (true) {
+        while (working) {
             ssize_t read_bytes = read(tunnel_fd, buffer, sizeof(buffer));
             if (read_bytes < 0) {
                 continue;
@@ -198,6 +190,8 @@ namespace v4over6 {
         LOGI("Successfully connected");
         stats.out_bytes = stats.out_packets = stats.in_bytes = stats.in_packets = 0;
 
+        working = true;
+
         // thread for handling incoming messages
         pthread_create(&receive_pid, NULL, receive_thread, NULL);
         // thread for managing keepalive messages
@@ -237,20 +231,24 @@ namespace v4over6 {
     void disconnect_socket() {
         LOGI("Disconnecting from server");
 
+        working = false;
+
+        char *b;
+
         if (receive_pid != -1) {
-            pthread_kill(receive_pid, SIGUSR2);
+            pthread_join(receive_pid, (void**)&b);
             receive_pid = -1;
             LOGI("Receive thread terminated");
         }
 
         if (timer_pid != -1) {
-            pthread_kill(timer_pid, SIGUSR2);
+            pthread_join(timer_pid, (void**)&b);
             timer_pid = -1;
             LOGI("Timer thread terminated");
         }
 
         if (forward_pid != -1) {
-            pthread_kill(forward_pid, SIGUSR2);
+            pthread_join(forward_pid, (void**)&b);
             forward_pid = -1;
             LOGI("Forward thread terminated");
         }

@@ -73,7 +73,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
     protected MaterialToolbar mtTopBar;
 
     private enum ConnectionStatus {
-        NO_CONNECTION, CONNECTING, CONNECTED
+        NO_CONNECTION, CONNECTING, CONNECTED, DISCONNECTING
     }
 
     private ServerConfigAdapter adapter;
@@ -184,22 +184,29 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             showToast("Please be patient while connecting");
             return;
         }
+        if (status == ConnectionStatus.DISCONNECTING) {
+            showToast("Please be patient while disconnecting");
+            return;
+        }
         if (status == ConnectionStatus.CONNECTED) {
-            V4over6.disconnectSocket();
+            switchStatus(ConnectionStatus.DISCONNECTING);
             try {
                 vpnService.stop();
                 Log.i(TAG, "VPN stopped");
+                new Thread(() -> {
+                    V4over6.disconnectSocket();
+                    Log.i(TAG, "Server disconnected");
+                    prevDownloadBytes = 0;
+                    prevUploadBytes = 0;
+                    stats = new Statistics();
+                    ipv4Config = new Ipv4Config();
+                    socketFd = -1;
+
+                    view.post(() -> switchStatus(ConnectionStatus.NO_CONNECTION));
+                }).start();
             } catch (IOException e) {
                 Log.i(TAG, "Cannot stop VPN");
             }
-
-            prevDownloadBytes = 0;
-            prevUploadBytes = 0;
-            stats = new Statistics();
-            ipv4Config = new Ipv4Config();
-            socketFd = -1;
-
-            switchStatus(ConnectionStatus.NO_CONNECTION);
             return;
         }
 
@@ -295,6 +302,12 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
             adapter.isIdle = false;
             resetConnectionInfo();
+        } else if (status == ConnectionStatus.DISCONNECTING) {
+            tvConnectStatus.setText(R.string.disconnecting);
+            tvConnectStatus.setTextColor(getContext().getColor(R.color.yellow_9));
+            enableStatsUpdater = false;
+            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
+            adapter.isIdle = false;
         } else {
             tvConnectStatus.setText(R.string.connected);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.green_9));
