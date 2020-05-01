@@ -181,7 +181,7 @@ public class ConfigListFragment extends BaseFragment {
     @OnClick(R.id.fab_connect)
     void handleClickConnect(View view) {
         if (status == ConnectionStatus.CONNECTING) {
-            makeToast("Please wait for the connection");
+            makeToast("Please be patient while connecting");
             return;
         }
         if (status == ConnectionStatus.CONNECTED) {
@@ -218,25 +218,18 @@ public class ConfigListFragment extends BaseFragment {
         new Thread(() -> {
             socketFd = V4over6.connectSocket(config.ipv6, config.port);
             if (socketFd < 0) {
-                view.post(() -> {
-                    makeToast("Cannot connect to server");
-                    switchStatus(ConnectionStatus.NO_CONNECTION);
-                });
+                view.post(() -> handleConnectionFailed("Cannot connect to server"));
                 return;
             }
 
             int ret = V4over6.requestIpv4Config();
             if (ret < 0) {
-                V4over6.disconnectSocket();
-                view.post(() -> {
-                    makeToast("Cannot get ipv4 config");
-                    switchStatus(ConnectionStatus.NO_CONNECTION);
-                });
+                view.post(() -> handleConnectionFailed("Cannot get ipv4 config"));
                 return;
             }
             V4over6.getIpv4Config(ipv4Config);
 
-            fabConnect.post(() -> {
+            view.post(() -> {
                 Intent vpnIndent = VpnService.prepare(getContext());
                 if (vpnIndent != null) {
                     startActivityForResult(vpnIndent, 0);
@@ -245,6 +238,12 @@ public class ConfigListFragment extends BaseFragment {
                 }
             });
         }).start();
+    }
+
+    private void handleConnectionFailed(String message) {
+        V4over6.disconnectSocket();
+        makeToast(message);
+        switchStatus(ConnectionStatus.NO_CONNECTION);
     }
 
     private void makeToast(String text) {
@@ -270,7 +269,7 @@ public class ConfigListFragment extends BaseFragment {
         vpnService.protect(socketFd);
         int tunnelFd = vpnService.start(ipv4Config);
         if (tunnelFd < 0) {
-            V4over6.disconnectSocket();
+            handleConnectionFailed("Cannot start android VPN service");
             return;
         }
         V4over6.setupTunnel(tunnelFd);
@@ -285,21 +284,18 @@ public class ConfigListFragment extends BaseFragment {
             tvConnectStatus.setText(R.string.no_connection);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.red_9));
             enableStatsUpdater = false;
-            fabConnect.setEnabled(true);
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.gray_b)));
             resetConnectionInfo();
         } else if (status == ConnectionStatus.CONNECTING) {
             tvConnectStatus.setText(R.string.connecting);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.yellow_9));
             enableStatsUpdater = false;
-            fabConnect.setEnabled(false);
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
             resetConnectionInfo();
         } else {
             tvConnectStatus.setText(R.string.connected);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.green_9));
             enableStatsUpdater = true;
-            fabConnect.setEnabled(true);
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connected_green)));
         }
     }
@@ -311,8 +307,7 @@ public class ConfigListFragment extends BaseFragment {
             if (resultCode == RESULT_OK) {
                 startVpn();
             } else {
-                makeToast("Permission denied");
-                switchStatus(ConnectionStatus.NO_CONNECTION);
+                handleConnectionFailed("Permission denied");
             }
         }
     }
