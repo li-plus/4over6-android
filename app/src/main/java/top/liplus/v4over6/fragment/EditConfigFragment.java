@@ -22,7 +22,7 @@ import top.liplus.v4over6.R;
 import top.liplus.v4over6.common.GlobalConfig;
 import top.liplus.v4over6.vpn.ServerConfig;
 
-public class NewConfigFragment extends BaseFragment {
+public class EditConfigFragment extends BaseFragment {
     @BindView(R.id.et_server_name)
     protected EditText etServerName;
     @BindView(R.id.et_server_addr)
@@ -32,10 +32,16 @@ public class NewConfigFragment extends BaseFragment {
     @BindView(R.id.mt_top_bar)
     protected MaterialToolbar mtTopBar;
 
+    private int configIndex;
+
+    public EditConfigFragment(int configIndex) {
+        this.configIndex = configIndex;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_new_config, container, false);
+        View root = inflater.inflate(R.layout.fragment_edit_config, container, false);
         ButterKnife.bind(this, root);
         mtTopBar.setOnMenuItemClickListener((MenuItem item) -> {
             if (item.getItemId() == R.id.menu_done) {
@@ -52,13 +58,25 @@ public class NewConfigFragment extends BaseFragment {
                     makeToast("Invalid Server Name");
                     return false;
                 }
-                // submit change
+
                 String name = etServerName.getText().toString();
                 String addr = etServerAddr.getText().toString();
                 int port = Integer.parseInt(etServerPort.getText().toString());
+                ServerConfig config = new ServerConfig(name, addr, port);
 
+                // submit change
                 List<ServerConfig> serverConfigs = GlobalConfig.getServerConfigs(getContext());
-                serverConfigs.add(new ServerConfig(name, addr, port));
+                if (configIndex < 0) {
+                    // create new config
+                    serverConfigs.add(config);
+                    makeToast("New config created");
+                } else if (configIndex < serverConfigs.size()) {
+                    // update config
+                    serverConfigs.set(configIndex, config);
+                    makeToast("Config updated");
+                } else {
+                    makeToast("Internal error");
+                }
                 GlobalConfig.setServerConfigs(getContext(), serverConfigs);
                 getBaseFragmentActivity().stopFragment();
                 return true;
@@ -66,6 +84,8 @@ public class NewConfigFragment extends BaseFragment {
                 return false;
             }
         });
+        mtTopBar.setTitle(configIndex < 0 ? R.string.new_config : R.string.edit_config);
+
         return root;
     }
 

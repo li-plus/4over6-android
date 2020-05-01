@@ -70,7 +70,7 @@ public class ConfigListFragment extends BaseFragment {
     @BindView(R.id.tv_dns)
     protected TextView tvDns;
     @BindView(R.id.mt_top_bar)
-    protected MaterialToolbar topAppBar;
+    protected MaterialToolbar mtTopBar;
 
     private enum ConnectionStatus {
         NO_CONNECTION, CONNECTING, CONNECTED
@@ -105,9 +105,9 @@ public class ConfigListFragment extends BaseFragment {
         rvServerConfig.addItemDecoration(new DividerItemDecoration(rvServerConfig.getContext(), LinearLayoutManager.VERTICAL));
         rvServerConfig.setItemAnimator(new DefaultItemAnimator());
 
-        topAppBar.setOnMenuItemClickListener((MenuItem item) -> {
+        mtTopBar.setOnMenuItemClickListener((MenuItem item) -> {
             if (item.getItemId() == R.id.menu_new) {
-                getBaseFragmentActivity().startFragment(new NewConfigFragment());
+                getBaseFragmentActivity().startFragment(new EditConfigFragment(-1));
                 return true;
             } else {
                 return false;

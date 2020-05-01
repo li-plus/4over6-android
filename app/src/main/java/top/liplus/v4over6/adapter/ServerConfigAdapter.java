@@ -12,7 +12,7 @@ import java.util.List;
 import top.liplus.v4over6.R;
 import top.liplus.v4over6.activity.BaseFragmentActivity;
 import top.liplus.v4over6.common.GlobalConfig;
-import top.liplus.v4over6.fragment.NewConfigFragment;
+import top.liplus.v4over6.fragment.EditConfigFragment;
 import top.liplus.v4over6.vpn.ServerConfig;
 
 public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, BaseRecyclerViewAdapter.BaseRecyclerViewHolder> {
@@ -60,7 +60,7 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
 
         // setup edit handler
         holder.findViewById(R.id.iv_edit).setOnClickListener((View view) -> {
-            activity.startFragment(new NewConfigFragment());
+            activity.startFragment(new EditConfigFragment(position));
         });
     }
 }
