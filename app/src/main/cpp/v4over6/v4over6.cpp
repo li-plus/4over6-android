@@ -233,22 +233,22 @@ namespace v4over6 {
 
         working = false;
 
-        char *b;
+        char *ret_val;
 
         if (receive_pid != -1) {
-            pthread_join(receive_pid, (void**)&b);
+            pthread_join(receive_pid, (void **) &ret_val);
             receive_pid = -1;
             LOGI("Receive thread terminated");
         }
 
         if (timer_pid != -1) {
-            pthread_join(timer_pid, (void**)&b);
+            pthread_join(timer_pid, (void **) &ret_val);
             timer_pid = -1;
             LOGI("Timer thread terminated");
         }
 
         if (forward_pid != -1) {
-            pthread_join(forward_pid, (void**)&b);
+            pthread_join(forward_pid, (void **) &ret_val);
             forward_pid = -1;
             LOGI("Forward thread terminated");
         }

@@ -193,20 +193,20 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             try {
                 vpnService.stop();
                 Log.i(TAG, "VPN stopped");
-                new Thread(() -> {
-                    V4over6.disconnectSocket();
-                    Log.i(TAG, "Server disconnected");
-                    prevDownloadBytes = 0;
-                    prevUploadBytes = 0;
-                    stats = new Statistics();
-                    ipv4Config = new Ipv4Config();
-                    socketFd = -1;
-
-                    view.post(() -> switchStatus(ConnectionStatus.NO_CONNECTION));
-                }).start();
             } catch (IOException e) {
                 Log.i(TAG, "Cannot stop VPN");
             }
+            new Thread(() -> {
+                V4over6.disconnectSocket();
+                Log.i(TAG, "Server disconnected");
+                prevDownloadBytes = 0;
+                prevUploadBytes = 0;
+                stats = new Statistics();
+                ipv4Config = new Ipv4Config();
+                socketFd = -1;
+
+                view.post(() -> switchStatus(ConnectionStatus.NO_CONNECTION));
+            }).start();
             return;
         }
 

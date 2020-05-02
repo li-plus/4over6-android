@@ -41,8 +41,8 @@ abstract public class BaseRecyclerViewAdapter<T, VH extends RecyclerView.ViewHol
         return data.size();
     }
 
-    public class BaseRecyclerViewHolder extends RecyclerView.ViewHolder {
-        public BaseRecyclerViewHolder(@NonNull ViewGroup parent, int layoutResId) {
+    public class BaseViewHolder extends RecyclerView.ViewHolder {
+        public BaseViewHolder(@NonNull ViewGroup parent, int layoutResId) {
             super(LayoutInflater.from(parent.getContext()).inflate(layoutResId, parent, false));
         }
 

@@ -18,7 +18,7 @@ import top.liplus.v4over6.fragment.EditConfigFragment;
 import top.liplus.v4over6.fragment.OnShowToastListener;
 import top.liplus.v4over6.vpn.ServerConfig;
 
-public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, BaseRecyclerViewAdapter.BaseRecyclerViewHolder> {
+public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, BaseRecyclerViewAdapter.BaseViewHolder> {
     private BaseFragment fragment;
     public int selectedIndex;
     public boolean isIdle;
@@ -31,8 +31,8 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
 
     @NonNull
     @Override
-    public BaseRecyclerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        BaseRecyclerViewHolder vh = new BaseRecyclerViewHolder(parent, R.layout.item_server_config);
+    public BaseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        BaseViewHolder vh = new BaseViewHolder(parent, R.layout.item_server_config);
         vh.getView().setOnClickListener((View view) -> {
             if (isIdle) {
                 notifyItemChanged(selectedIndex);
@@ -48,7 +48,7 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
     }
 
     @Override
-    public void onBindViewHolder(@NonNull BaseRecyclerViewAdapter.BaseRecyclerViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull BaseRecyclerViewAdapter.BaseViewHolder holder, int position) {
         ServerConfig config = getData().get(position);
         // setup server address and port
         ((TextView) holder.findViewById(R.id.tv_server_name)).setText(config.name);
