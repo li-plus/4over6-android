@@ -33,4 +33,6 @@ namespace v4over6 {
     bool is_running();
 
     bool is_connecting();
+
+    bool is_disconnecting();
 }

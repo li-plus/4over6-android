@@ -20,4 +20,6 @@ public class V4over6 {
     public static native boolean isRunning();
 
     public static native boolean isConnecting();
+
+    public static native boolean isDisconnecting();
 }

@@ -99,3 +99,9 @@ JNIEXPORT jboolean JNICALL
 Java_top_liplus_v4over6_vpn_V4over6_isConnecting(JNIEnv *env, jclass type) {
     return (jboolean) v4over6::is_connecting();
 }
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_top_liplus_v4over6_vpn_V4over6_isDisconnecting(JNIEnv *env, jclass type) {
+    return (jboolean) v4over6::is_disconnecting();
+}

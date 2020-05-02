@@ -2,6 +2,7 @@ package top.liplus.v4over6.vpn;
 
 import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -30,5 +31,12 @@ public class VpnService4Over6 extends VpnService {
 
     public void stop() throws IOException {
         parcelFileDescriptor.close();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.i(TAG, "VPN destroyed by android");
+        V4over6.disconnectSocket();
+        super.onDestroy();
     }
 }

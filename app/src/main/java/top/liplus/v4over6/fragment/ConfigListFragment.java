@@ -114,17 +114,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             }
         });
 
-        if (V4over6.isRunning()) {
-            V4over6.getStatistics(stats);
-            prevDownloadBytes = stats.downloadBytes;
-            prevUploadBytes = stats.uploadBytes;
-            V4over6.getIpv4Config(ipv4Config);
-            switchStatus(ConnectionStatus.CONNECTED);
-        } else if (V4over6.isConnecting()) {
-            switchStatus(ConnectionStatus.CONNECTING);
-        } else {
-            switchStatus(ConnectionStatus.NO_CONNECTION);
-        }
+        resumeStatus();
 
         statsUpdater = new Timer("statsUpdater");
         statsUpdater.schedule(new TimerTask() {
@@ -171,6 +161,28 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
     public void onDestroyView() {
         statsUpdater.cancel();
         super.onDestroyView();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        resumeStatus();
+    }
+
+    private void resumeStatus() {
+        if (V4over6.isRunning()) {
+            V4over6.getStatistics(stats);
+            prevDownloadBytes = stats.downloadBytes;
+            prevUploadBytes = stats.uploadBytes;
+            V4over6.getIpv4Config(ipv4Config);
+            switchStatus(ConnectionStatus.CONNECTED);
+        } else if (V4over6.isConnecting()) {
+            switchStatus(ConnectionStatus.CONNECTING);
+        } else if (V4over6.isDisconnecting()) {
+            switchStatus(ConnectionStatus.DISCONNECTING);
+        } else {
+            switchStatus(ConnectionStatus.NO_CONNECTION);
+        }
     }
 
     @Override
@@ -308,6 +320,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             enableStatsUpdater = false;
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
             adapter.isIdle = false;
+            resetConnectionInfo();
         } else {
             tvConnectStatus.setText(R.string.connected);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.green_9));

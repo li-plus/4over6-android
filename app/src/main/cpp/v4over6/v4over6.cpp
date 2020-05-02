@@ -282,10 +282,14 @@ namespace v4over6 {
     }
 
     bool is_running() {
-        return socket_fd != -1 && tunnel_fd != -1;
+        return socket_fd != -1 && tunnel_fd != -1 && working;
     }
 
     bool is_connecting() {
         return socket_fd != -1 && tunnel_fd == -1;
+    }
+
+    bool is_disconnecting() {
+        return socket_fd != -1 && tunnel_fd != -1 && !working;
     }
 }
