@@ -6,8 +6,10 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import android.widget.Switch;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -32,6 +34,10 @@ public class EditConfigFragment extends BaseFragment implements OnShowToastListe
     protected EditText etServerAddr;
     @BindView(R.id.et_server_port)
     protected EditText etServerPort;
+    @BindView(R.id.et_uuid)
+    protected EditText etUUID;
+    @BindView(R.id.sw_encryption)
+    protected Switch swEncryption;
     @BindView(R.id.mt_top_bar)
     protected MaterialToolbar mtTopBar;
 
@@ -54,17 +60,23 @@ public class EditConfigFragment extends BaseFragment implements OnShowToastListe
                     return false;
                 }
                 if (!validateIpv6Address(etServerAddr.getText().toString())) {
-                    showToast("Invalid IPv6 Address");
+                    showToast("Invalid IPv6 Address or Hostname");
                     return false;
                 }
                 if (!validatePort(etServerPort.getText().toString())) {
                     showToast("Invalid Port");
                     return false;
                 }
+                boolean enable_encryption = swEncryption.isChecked();
+                String uuid = etUUID.getText().toString();
+                if (enable_encryption && !validateUUID(uuid)) {
+                    showToast("Invalid Encryption UUID");
+                    return false;
+                }
                 String name = etServerName.getText().toString();
                 String addr = etServerAddr.getText().toString();
                 int port = Integer.parseInt(etServerPort.getText().toString());
-                ServerConfig config = new ServerConfig(name, addr, port);
+                ServerConfig config = new ServerConfig(name, addr, port, enable_encryption, uuid);
 
                 // submit change
                 List<ServerConfig> serverConfigs = GlobalConfig.getServerConfigs(getContext());
@@ -94,9 +106,13 @@ public class EditConfigFragment extends BaseFragment implements OnShowToastListe
         if (0 <= configIndex && configIndex < serverConfigs.size()) {
             ServerConfig config = serverConfigs.get(configIndex);
             etServerName.setText(config.name);
-            etServerAddr.setText(config.ipv6);
+            etServerAddr.setText(config.host);
             etServerPort.setText(String.valueOf(config.port));
+            etUUID.setText(config.uuid);
+            swEncryption.setChecked(config.enable_encrypt);
         }
+        swEncryption.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) -> etUUID.setEnabled(isChecked));
+        etUUID.setEnabled(swEncryption.isChecked());
         Log.i(TAG, "Editing config " + configIndex);
         return root;
     }
@@ -106,8 +122,12 @@ public class EditConfigFragment extends BaseFragment implements OnShowToastListe
         Snackbar.make(getView(), text, BaseTransientBottomBar.LENGTH_SHORT).show();
     }
 
-    private static boolean validateIpv6Address(String addr) {
-        return !addr.isEmpty() && addr.length() < 40;
+    private static boolean validateUUID(String uuid) {
+        return uuid.matches("[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}");
+    }
+
+    private static boolean validateIpv6Address(String host) {
+        return ServerConfig.isIPv6Address(host) || ServerConfig.isHostname(host);
     }
 
     private static boolean validatePort(String port) {
