@@ -72,6 +72,9 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
     @BindView(R.id.mt_top_bar)
     protected MaterialToolbar mtTopBar;
 
+    private static final int REQUEST_CODE_VPN = 1;
+    private static final int REQUEST_CODE_VPN_DETECT = 2;
+
     private enum ConnectionStatus {
         NO_CONNECTION, CONNECTING, CONNECTED, DISCONNECTING
     }
@@ -229,6 +232,14 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
         }
         ServerConfig config = adapter.getData().get(adapter.selectedIndex);
 
+        // close any other vpn connection
+        {
+            Intent vpnIndent = VpnService.prepare(getContext());
+            if (vpnIndent != null) {
+                startActivityForResult(vpnIndent, REQUEST_CODE_VPN_DETECT);
+            }
+        }
+
         // connecting
         switchStatus(ConnectionStatus.CONNECTING);
 
@@ -251,7 +262,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             view.post(() -> {
                 Intent vpnIndent = VpnService.prepare(getContext());
                 if (vpnIndent != null) {
-                    startActivityForResult(vpnIndent, 0);
+                    startActivityForResult(vpnIndent, REQUEST_CODE_VPN);
                 } else {
                     startVpn();
                 }
@@ -334,7 +345,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 0) {
+        if (requestCode == REQUEST_CODE_VPN) {
             if (resultCode == RESULT_OK) {
                 startVpn();
             } else {
