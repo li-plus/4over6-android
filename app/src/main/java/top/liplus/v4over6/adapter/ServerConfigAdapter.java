@@ -52,7 +52,7 @@ public class ServerConfigAdapter extends BaseRecyclerViewAdapter<ServerConfig, B
         ServerConfig config = getData().get(position);
         // setup server address and port
         ((TextView) holder.findViewById(R.id.tv_server_name)).setText(config.name);
-        ((TextView) holder.findViewById(R.id.tv_server_addr_port)).setText(String.format("[%s]:%d", config.ipv6, config.port));
+        ((TextView) holder.findViewById(R.id.tv_server_addr_port)).setText(String.format("[%s]:%d", config.host, config.port));
         // setup radio button
         ((RadioButton) holder.findViewById(R.id.rb_curr_config)).setChecked(selectedIndex == position);
         // setup delete handler

@@ -2,9 +2,9 @@
     <string name="app_name">V4over6</string>
     <string name="server_name">Server Name</string>
     <string name="server_name_example">e.g. A Great VPN</string>
-    <string name="server_addr">Server IPv6 Address</string>
+    <string name="server_addr">Server IPv6 Address / Hostname</string>
     <string name="server_port">Server Port</string>
-    <string name="server_addr_example">e.g. 2001:db8::23:8:800:417a</string>
+    <string name="server_addr_example">e.g. 2001::417a / inftyloop.tech</string>
     <string name="server_port_example">e.g. 12345</string>
     <string name="reset">Reset</string>
     <string name="connect">Connect</string>
@@ -23,4 +23,9 @@
     <string name="edit_config">Edit Config</string>
     <string name="new_config">New Config</string>
     <string name="done">Done</string>
+    <string name="encryption">Encryption UUID</string>
+    <string name="uuid_hint">e.g. b61df09c-efb2-4f31-919a-d810605459bb</string>
+    <string name="encryption_enabled">Encryption Enabled</string>
+    <string name="encryption_disabled">Encryption Disabled</string>
+    <string name="enable_encryption">Enable Encryption</string>
 </resources>

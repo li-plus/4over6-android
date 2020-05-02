@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+              xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
@@ -32,11 +32,11 @@
             android:text="@string/server_name" />
 
         <EditText
-            android:id="@+id/et_server_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/server_name_example"
-            android:inputType="text" />
+                android:id="@+id/et_server_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/server_name_example"
+                android:inputType="text" android:singleLine="true"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -45,24 +45,42 @@
             android:text="@string/server_addr" />
 
         <EditText
-            android:id="@+id/et_server_addr"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/server_addr_example"
-            android:inputType="text" />
+                android:id="@+id/et_server_addr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/server_addr_example"
+                android:inputType="text" android:singleLine="true"/>
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="16sp"
-            android:text="@string/server_port" />
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16sp"
+                android:text="@string/server_port" android:textAlignment="viewStart"/>
 
         <EditText
-            android:id="@+id/et_server_port"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/server_port_example"
-            android:inputType="number"
-            android:tag="@string/server_port" />
+                android:id="@+id/et_server_port"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/server_port_example"
+                android:inputType="number"
+                android:tag="@string/server_port" android:singleLine="true"/>
+        <Switch
+                android:text="@string/enable_encryption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/sw_encryption"
+                android:textOn="@string/encryption_enabled" android:textOff="@string/encryption_disabled"
+                android:showText="false" android:checked="false" android:textAlignment="viewStart"/>
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16sp"
+                android:text="@string/encryption" android:id="@+id/textView4"/>
+        <EditText
+                android:id="@+id/et_uuid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/uuid_hint"
+                android:inputType="text"
+                android:tag="@string/server_port" android:singleLine="true"/>
     </LinearLayout>
 </LinearLayout>

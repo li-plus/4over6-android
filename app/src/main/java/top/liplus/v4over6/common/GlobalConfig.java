@@ -32,14 +32,19 @@ public class GlobalConfig {
         List<ServerConfig> serverConfigs = new ArrayList<>();
         for (String strConfig : strConfigs.split("\n\n")) {
             String[] serverInfo = strConfig.split("\n");
-            if (serverInfo.length != 3) {
+            if (serverInfo.length != 5 && serverInfo.length != 4) {
                 continue;
             }
             try {
                 String name = serverInfo[0];
                 String ipv6 = serverInfo[1];
                 int port = Integer.parseInt(serverInfo[2]);
-                serverConfigs.add(new ServerConfig(name, ipv6, port));
+                boolean enable_encryption = Boolean.parseBoolean(serverInfo[3]);
+                String uuid = "";
+                if (serverInfo.length > 4) {
+                    uuid = serverInfo[4];
+                }
+                serverConfigs.add(new ServerConfig(name, ipv6, port, enable_encryption, uuid));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }
@@ -52,8 +57,10 @@ public class GlobalConfig {
         StringBuilder builder = new StringBuilder();
         for (ServerConfig config : configs) {
             builder.append(config.name).append('\n')
-                    .append(config.ipv6).append('\n')
-                    .append(config.port).append("\n\n");
+                    .append(config.host).append('\n')
+                    .append(config.port).append("\n")
+                    .append(config.enable_encrypt).append("\n")
+                    .append(config.uuid).append("\n\n");
         }
         sp.edit().putString(Defs.KEY_SERVER_CONFIGS, builder.toString()).apply();
     }

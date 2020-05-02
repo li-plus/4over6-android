@@ -22,6 +22,8 @@ namespace v4over6 {
 
     int request_ipv4_config();
 
+    void disconnect_socket_timeout();
+
     void disconnect_socket();
 
     void setup_tunnel(int tun_fd);

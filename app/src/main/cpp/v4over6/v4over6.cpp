@@ -108,8 +108,8 @@ namespace v4over6 {
                 // close connection
                 LOGE("Server heartbeat timeout");
                 timer_pid = -1; // prevent itself to be killed
-                disconnect_socket();
-                pthread_exit(EXIT_SUCCESS);
+                disconnect_socket_timeout();
+                break;
             }
             if (last_heartbeat_send == -1 ||
                 current_time - last_heartbeat_send >= 20) {
@@ -228,9 +228,7 @@ namespace v4over6 {
         return 0;
     }
 
-    void disconnect_socket() {
-        LOGI("Disconnecting from server");
-
+    void disconnect_socket_timeout() {
         working = false;
 
         char *ret_val;
@@ -239,12 +237,6 @@ namespace v4over6 {
             pthread_join(receive_pid, (void **) &ret_val);
             receive_pid = -1;
             LOGI("Receive thread terminated");
-        }
-
-        if (timer_pid != -1) {
-            pthread_join(timer_pid, (void **) &ret_val);
-            timer_pid = -1;
-            LOGI("Timer thread terminated");
         }
 
         if (forward_pid != -1) {
@@ -265,6 +257,22 @@ namespace v4over6 {
         }
 
         tunnel_fd = -1;
+    }
+
+    void disconnect_socket() {
+        working = false;
+
+        LOGI("Disconnecting from server");
+
+        char *ret_val;
+
+        if (timer_pid != -1) {
+            pthread_join(timer_pid, (void **) &ret_val);
+            timer_pid = -1;
+            LOGI("Timer thread terminated");
+        }
+
+        disconnect_socket_timeout();
     }
 
     void setup_tunnel(int tunnel_fd_) {

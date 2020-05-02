@@ -2,6 +2,7 @@ package top.liplus.v4over6.fragment;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.net.DnsResolver;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.text.format.Formatter;
@@ -25,7 +26,11 @@ import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -178,6 +183,32 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
         return FADE_TRANSITION_CONFIG;
     }
 
+    void handleConnectImpl(ServerConfig config, View view) {
+        new Thread(() -> {
+            socketFd = V4over6.connectSocket(config.ipv6, config.port);
+            if (socketFd < 0) {
+                view.post(() -> handleConnectionFailed("Cannot connect to server"));
+                return;
+            }
+
+            int ret = V4over6.requestIpv4Config();
+            if (ret < 0) {
+                view.post(() -> handleConnectionFailed("Cannot get ipv4 config"));
+                return;
+            }
+            V4over6.getIpv4Config(ipv4Config);
+
+            view.post(() -> {
+                Intent vpnIndent = VpnService.prepare(getContext());
+                if (vpnIndent != null) {
+                    startActivityForResult(vpnIndent, 0);
+                } else {
+                    startVpn();
+                }
+            });
+        }).start();
+    }
+
     @OnClick(R.id.fab_connect)
     void handleClickConnect(View view) {
         if (status == ConnectionStatus.CONNECTING) {
@@ -220,31 +251,35 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
         // connecting
         switchStatus(ConnectionStatus.CONNECTING);
 
-        Log.i(TAG, "Connecting to [" + config.ipv6 + "]:" + config.port);
+        Log.i(TAG, "Connecting to [" + config.host + "]:" + config.port);
 
-        new Thread(() -> {
-            socketFd = V4over6.connectSocket(config.ipv6, config.port);
-            if (socketFd < 0) {
-                view.post(() -> handleConnectionFailed("Cannot connect to server"));
-                return;
-            }
-
-            int ret = V4over6.requestIpv4Config();
-            if (ret < 0) {
-                view.post(() -> handleConnectionFailed("Cannot get ipv4 config"));
-                return;
-            }
-            V4over6.getIpv4Config(ipv4Config);
-
-            view.post(() -> {
-                Intent vpnIndent = VpnService.prepare(getContext());
-                if (vpnIndent != null) {
-                    startActivityForResult(vpnIndent, 0);
-                } else {
-                    startVpn();
+        if (!ServerConfig.isIPv6Address(config.host)) {
+            // Perform DNS resolve
+            new Thread(() -> {
+                boolean resolve_ok = false;
+                try {
+                    InetAddress addr = InetAddress.getByName(config.host);
+                    String host = addr.getHostAddress();
+                    if(host != null && ServerConfig.isIPv6Address(host)) {
+                        resolve_ok = true;
+                        config.ipv6 = host;
+                    }
+                } catch (UnknownHostException ignored) {
                 }
-            });
-        }).start();
+                if (!resolve_ok) {
+                    Log.w(TAG, "Failed to perform DNS lookup for: " + config.host);
+                    view.post(() -> {
+                        showToast("Failed to perform DNS lookup for " + config.host);
+                        switchStatus(ConnectionStatus.NO_CONNECTION);
+                    });
+                } else {
+                    view.post(() -> handleConnectImpl(config, view));
+                }
+            }).start();
+        } else {
+            config.ipv6 = config.host;
+            handleConnectImpl(config, view);
+        }
     }
 
     private void handleConnectionFailed(String message) {
