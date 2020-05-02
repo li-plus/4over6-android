@@ -59,8 +59,11 @@ public class GlobalConfig {
             builder.append(config.name).append('\n')
                     .append(config.host).append('\n')
                     .append(config.port).append("\n")
-                    .append(config.enable_encrypt).append("\n")
-                    .append(config.uuid).append("\n\n");
+                    .append(config.enable_encrypt);
+            if (config.enable_encrypt) {
+                builder.append('\n').append(config.uuid);
+            }
+            builder.append("\n\n");
         }
         sp.edit().putString(Defs.KEY_SERVER_CONFIGS, builder.toString()).apply();
     }
