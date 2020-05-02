@@ -88,6 +88,9 @@ public class EditConfigFragment extends BaseFragment implements OnShowToastListe
         });
         List<ServerConfig> serverConfigs = GlobalConfig.getServerConfigs(getContext());
         mtTopBar.setTitle(configIndex < 0 ? R.string.new_config : R.string.edit_config);
+        mtTopBar.setNavigationOnClickListener((View view) -> {
+            getBaseFragmentActivity().stopFragment();
+        });
         if (0 <= configIndex && configIndex < serverConfigs.size()) {
             ServerConfig config = serverConfigs.get(configIndex);
             etServerName.setText(config.name);
