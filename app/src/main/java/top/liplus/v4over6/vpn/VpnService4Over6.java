@@ -14,17 +14,16 @@ public class VpnService4Over6 extends VpnService {
     private ParcelFileDescriptor parcelFileDescriptor;
 
     public int start(Ipv4Config config) {
-        parcelFileDescriptor = new Builder()
-                .setMtu(1492)
+        Builder builder = new Builder()
+                .setMtu(1400)
                 .allowFamily(OsConstants.AF_INET)
                 .addAddress(config.ipv4, 32)
                 .addRoute(config.route, 0)
                 .addDnsServer(config.dns1)
-                .addDnsServer(config.dns2)
-                .addDnsServer(config.dns3)
-                .setSession("Session " + config.ipv4)
-                .establish();
-
+                .setSession("Session " + config.ipv4);
+        if (!config.dns2.equals("0.0.0.0")) builder.addDnsServer(config.dns2);
+        if (!config.dns3.equals("0.0.0.0")) builder.addDnsServer(config.dns3);
+        parcelFileDescriptor = builder.establish();
         if (parcelFileDescriptor == null) {
             return -1;
         } else {
