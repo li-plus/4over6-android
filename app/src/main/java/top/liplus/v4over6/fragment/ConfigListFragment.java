@@ -85,8 +85,8 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
 
     private static VpnService4Over6 vpnService = new VpnService4Over6();
 
-    private int prevDownloadBytes = 0;
-    private int prevUploadBytes = 0;
+    private long prevDownloadBytes = 0;
+    private long prevUploadBytes = 0;
     private Statistics stats = new Statistics();
     private Ipv4Config ipv4Config = new Ipv4Config();
     private ConnectionStatus status = ConnectionStatus.NO_CONNECTION;
@@ -127,8 +127,8 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             public void run() {
                 if (enableStatsUpdater) {
                     V4over6.getStatistics(stats);
-                    int uploadSpeed = stats.uploadBytes - prevUploadBytes;
-                    int downloadSpeed = stats.downloadBytes - prevDownloadBytes;
+                    long uploadSpeed = stats.uploadBytes - prevUploadBytes;
+                    long downloadSpeed = stats.downloadBytes - prevDownloadBytes;
                     prevUploadBytes = stats.uploadBytes;
                     prevDownloadBytes = stats.downloadBytes;
 

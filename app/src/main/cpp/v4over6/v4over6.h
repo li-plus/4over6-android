@@ -12,10 +12,10 @@ namespace v4over6 {
     };
 
     struct Statistics {
-        int out_bytes = 0;
-        int out_packets = 0;
-        int in_bytes = 0;
-        int in_packets = 0;
+        uint64_t out_bytes = 0;
+        uint64_t out_packets = 0;
+        uint64_t in_bytes = 0;
+        uint64_t in_packets = 0;
     };
 
     int connect_socket(const char *addr_s, int port, bool enable_encrypt, const uint8_t *uuid);

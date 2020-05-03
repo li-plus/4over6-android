@@ -45,17 +45,17 @@ Java_top_liplus_v4over6_vpn_V4over6_getStatistics(JNIEnv *env, jclass type, jobj
 
     v4over6::Statistics native_stats = v4over6::get_statistics();
 
-    field_id = env->GetFieldID(clazz, "uploadPackets", "I");
-    env->SetIntField(stats, field_id, native_stats.out_packets);
+    field_id = env->GetFieldID(clazz, "uploadPackets", "J");
+    env->SetLongField(stats, field_id, native_stats.out_packets);
 
-    field_id = env->GetFieldID(clazz, "uploadBytes", "I");
-    env->SetIntField(stats, field_id, native_stats.out_bytes);
+    field_id = env->GetFieldID(clazz, "uploadBytes", "J");
+    env->SetLongField(stats, field_id, native_stats.out_bytes);
 
-    field_id = env->GetFieldID(clazz, "downloadPackets", "I");
-    env->SetIntField(stats, field_id, native_stats.in_packets);
+    field_id = env->GetFieldID(clazz, "downloadPackets", "J");
+    env->SetLongField(stats, field_id, native_stats.in_packets);
 
-    field_id = env->GetFieldID(clazz, "downloadBytes", "I");
-    env->SetIntField(stats, field_id, native_stats.in_bytes);
+    field_id = env->GetFieldID(clazz, "downloadBytes", "J");
+    env->SetLongField(stats, field_id, native_stats.in_bytes);
 }
 
 extern "C"
