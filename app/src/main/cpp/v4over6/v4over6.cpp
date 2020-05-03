@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <strings.h>
 #include <netdb.h>
+#include <sodium.h>
 
 #define TAG "lib4over6"
 
@@ -144,7 +145,7 @@ namespace v4over6 {
             }
             struct iphdr *hdr = (struct iphdr *) buffer;
             if (hdr->version != 4) {
-                LOGE("Received an IPv%d packet from tunnel", hdr->version);
+                LOGD("Received an IPv%d packet from tunnel", hdr->version);
                 continue;
             }
             uint16_t tot_len = ntohs(hdr->tot_len);
@@ -255,7 +256,11 @@ namespace v4over6 {
             LOGI("IPv6 socket closed");
         }
 
-        tunnel_fd = -1;
+        if (tunnel_fd != -1) {
+            close(tunnel_fd);
+            tunnel_fd = -1;
+            LOGI("Tunnel socket closed");
+        }
     }
 
     void setup_tunnel(int tunnel_fd_) {

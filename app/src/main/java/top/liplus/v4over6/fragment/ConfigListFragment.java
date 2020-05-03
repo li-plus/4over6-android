@@ -81,7 +81,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
     private static final int REQUEST_CODE_VPN_DETECT = 2;
 
     private enum ConnectionStatus {
-        NO_CONNECTION, CONNECTING, CONNECTED, DISCONNECTING
+        NO_CONNECTION, CONNECTING, CONNECTED
     }
 
     private ServerConfigAdapter adapter;
@@ -204,6 +204,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
 
             int ret = V4over6.requestIpv4Config();
             if (ret < 0) {
+                V4over6.disconnectSocket();
                 view.post(() -> handleConnectionFailed("Cannot get ipv4 config"));
                 return;
             }
@@ -226,12 +227,7 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             showToast("Please be patient while connecting");
             return;
         }
-        if (status == ConnectionStatus.DISCONNECTING) {
-            showToast("Please be patient while disconnecting");
-            return;
-        }
         if (status == ConnectionStatus.CONNECTED) {
-            switchStatus(ConnectionStatus.DISCONNECTING);
             V4over6.disconnectSocket();
             Log.i(TAG, "Server disconnected");
             try {
@@ -352,13 +348,6 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             resetConnectionInfo();
         } else if (status == ConnectionStatus.CONNECTING) {
             tvConnectStatus.setText(R.string.connecting);
-            tvConnectStatus.setTextColor(getContext().getColor(R.color.yellow_9));
-            enableStatsUpdater = false;
-            fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
-            adapter.isIdle = false;
-            resetConnectionInfo();
-        } else if (status == ConnectionStatus.DISCONNECTING) {
-            tvConnectStatus.setText(R.string.disconnecting);
             tvConnectStatus.setTextColor(getContext().getColor(R.color.yellow_9));
             enableStatsUpdater = false;
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.connecting_yellow)));
