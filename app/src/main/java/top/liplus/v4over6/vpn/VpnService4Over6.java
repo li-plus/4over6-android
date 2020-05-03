@@ -1,5 +1,6 @@
 package top.liplus.v4over6.vpn;
 
+import android.content.Intent;
 import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
@@ -34,9 +35,8 @@ public class VpnService4Over6 extends VpnService {
     }
 
     @Override
-    public void onDestroy() {
-        Log.i(TAG, "VPN destroyed by android");
+    public boolean onUnbind(Intent intent) {
         V4over6.disconnectSocket();
-        super.onDestroy();
+        return super.onUnbind(intent);
     }
 }

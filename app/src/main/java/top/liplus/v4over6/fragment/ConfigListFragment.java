@@ -184,10 +184,6 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             prevUploadBytes = stats.uploadBytes;
             V4over6.getIpv4Config(ipv4Config);
             switchStatus(ConnectionStatus.CONNECTED);
-        } else if (V4over6.isConnecting()) {
-            switchStatus(ConnectionStatus.CONNECTING);
-        } else if (V4over6.isDisconnecting()) {
-            switchStatus(ConnectionStatus.DISCONNECTING);
         } else {
             switchStatus(ConnectionStatus.NO_CONNECTION);
         }
@@ -236,23 +232,21 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
         }
         if (status == ConnectionStatus.CONNECTED) {
             switchStatus(ConnectionStatus.DISCONNECTING);
+            V4over6.disconnectSocket();
+            Log.i(TAG, "Server disconnected");
             try {
                 vpnService.stop();
                 Log.i(TAG, "VPN stopped");
-            } catch (IOException e) {
-                Log.i(TAG, "Cannot stop VPN");
-            }
-            new Thread(() -> {
-                V4over6.disconnectSocket();
-                Log.i(TAG, "Server disconnected");
                 prevDownloadBytes = 0;
                 prevUploadBytes = 0;
                 stats = new Statistics();
                 ipv4Config = new Ipv4Config();
                 socketFd = -1;
 
-                view.post(() -> switchStatus(ConnectionStatus.NO_CONNECTION));
-            }).start();
+                switchStatus(ConnectionStatus.NO_CONNECTION);
+            } catch (IOException e) {
+                Log.i(TAG, "Cannot stop VPN");
+            }
             return;
         }
 
@@ -281,12 +275,12 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             new Thread(() -> {
                 boolean resolve_ok = false;
                 try {
-                    Log.i(TAG, "get host "+ config.host);
+                    Log.i(TAG, "get host " + config.host);
                     InetAddress addr = Inet6Address.getByName(config.host);
 
                     String host = addr.getHostAddress();
 
-                    if(host != null && ServerConfig.isIPv6Address(host)) {
+                    if (host != null && ServerConfig.isIPv6Address(host)) {
                         resolve_ok = true;
                         config.ipv6 = host;
                     }

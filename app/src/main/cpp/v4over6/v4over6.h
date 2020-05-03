@@ -31,8 +31,4 @@ namespace v4over6 {
     Statistics get_statistics();
 
     bool is_running();
-
-    bool is_connecting();
-
-    bool is_disconnecting();
 }
