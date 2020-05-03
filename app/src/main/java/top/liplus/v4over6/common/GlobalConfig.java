@@ -60,7 +60,7 @@ public class GlobalConfig {
                     .append(config.host).append('\n')
                     .append(config.port).append("\n")
                     .append(config.enable_encrypt);
-            if (config.enable_encrypt) {
+            if (config.enable_encrypt || !config.uuid.isEmpty()) {
                 builder.append('\n').append(config.uuid);
             }
             builder.append("\n\n");
