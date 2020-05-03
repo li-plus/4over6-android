@@ -37,8 +37,9 @@ public class VpnService4Over6 extends VpnService {
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "VpnService destroyed");
         V4over6.disconnectSocket();
-        return super.onUnbind(intent);
     }
 }

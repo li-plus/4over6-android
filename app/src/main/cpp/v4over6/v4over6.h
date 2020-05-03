@@ -18,7 +18,7 @@ namespace v4over6 {
         int in_packets = 0;
     };
 
-    int connect_socket(const char *addr, int port);
+    int connect_socket(const char *addr_s, int port, bool enable_encrypt, const uint8_t *uuid);
 
     int request_ipv4_config();
 

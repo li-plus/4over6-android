@@ -5,7 +5,7 @@ public class V4over6 {
         System.loadLibrary("v4over6");
     }
 
-    public static native int connectSocket(String addr, int port);
+    public static native int connectSocket(String addr, int port, boolean enable_encrypt, byte[] uuid);
 
     public static native void disconnectSocket();
 

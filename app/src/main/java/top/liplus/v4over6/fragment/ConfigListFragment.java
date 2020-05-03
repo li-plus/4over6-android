@@ -29,10 +29,7 @@ import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
@@ -196,7 +193,11 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
 
     void handleConnectImpl(ServerConfig config, View view) {
         new Thread(() -> {
-            socketFd = V4over6.connectSocket(config.ipv6, config.port);
+            byte[] uuid = new byte[16];
+            if (config.enable_encrypt) {
+                uuid = ServerConfig.getBytesFromUUID(UUID.fromString(config.uuid));
+            }
+            socketFd = V4over6.connectSocket(config.ipv6, config.port, config.enable_encrypt, uuid);
             if (socketFd < 0) {
                 view.post(() -> handleConnectionFailed("Cannot connect to server"));
                 return;
@@ -233,12 +234,6 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             try {
                 vpnService.stop();
                 Log.i(TAG, "VPN stopped");
-                prevDownloadBytes = 0;
-                prevUploadBytes = 0;
-                stats = new Statistics();
-                ipv4Config = new Ipv4Config();
-                socketFd = -1;
-
                 switchStatus(ConnectionStatus.NO_CONNECTION);
             } catch (IOException e) {
                 Log.i(TAG, "Cannot stop VPN");
@@ -345,6 +340,11 @@ public class ConfigListFragment extends BaseFragment implements OnShowToastListe
             enableStatsUpdater = false;
             fabConnect.setBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.disconnected_red)));
             adapter.isIdle = true;
+            prevDownloadBytes = 0;
+            prevUploadBytes = 0;
+            stats = new Statistics();
+            ipv4Config = new Ipv4Config();
+            socketFd = -1;
             resetConnectionInfo();
         } else if (status == ConnectionStatus.CONNECTING) {
             tvConnectStatus.setText(R.string.connecting);

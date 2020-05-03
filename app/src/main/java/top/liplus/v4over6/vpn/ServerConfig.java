@@ -1,5 +1,7 @@
 package top.liplus.v4over6.vpn;
 
+import java.nio.ByteBuffer;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class ServerConfig {
@@ -42,5 +44,12 @@ public class ServerConfig {
 
     public static boolean isHostname(final String input) {
         return HOSTNAME_PATTERN.matcher(input).matches();
+    }
+
+    public static byte[] getBytesFromUUID(UUID uuid) {
+        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
+        bb.putLong(uuid.getMostSignificantBits());
+        bb.putLong(uuid.getLeastSignificantBits());
+        return bb.array();
     }
 }

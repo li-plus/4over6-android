@@ -8,13 +8,14 @@
 extern "C"
 JNIEXPORT jint JNICALL
 Java_top_liplus_v4over6_vpn_V4over6_connectSocket(JNIEnv *env, jclass type, jstring addr_,
-                                                  jint port) {
+                                                  jint port, jboolean enable_encrypt, jbyteArray uuid_) {
     const char *addr = env->GetStringUTFChars(addr_, 0);
+    jbyte *uuid = (jbyte *)env->GetByteArrayElements(uuid_, nullptr);
 
-    int ret = v4over6::connect_socket(addr, port);
+    int ret = v4over6::connect_socket(addr, port, enable_encrypt, (uint8_t*)uuid);
 
     env->ReleaseStringUTFChars(addr_, addr);
-
+    env->ReleaseByteArrayElements(uuid_, uuid, 0);
     return ret;
 }
 

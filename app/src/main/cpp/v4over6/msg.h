@@ -27,4 +27,6 @@ namespace v4over6 {
         MsgHeader header;
         uint8_t data[MSG_DATA_SIZE];
     };
+
+    constexpr size_t HEADER_LEN = sizeof(MsgHeader);
 }
